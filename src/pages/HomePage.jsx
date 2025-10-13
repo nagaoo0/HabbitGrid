@@ -166,9 +166,9 @@ const HomePage = () => {
             <Button
               onClick={handleAddHabit}
               size="lg"
-              className="rounded-full w-14 h-14 shadow-2xl hover:shadow-3xl transition-all hover:scale-110"
+              className="rounded-full shadow-lg hover:shadow-xl transition-shadow"
             >
-              <Plus className="w-6 h-6" />
+              <Plus className="" />
             </Button>
           </motion.div>
         )}
