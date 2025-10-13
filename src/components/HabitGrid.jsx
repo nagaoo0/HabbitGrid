@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getColorIntensity, isToday, formatDate, getWeekdayLabel } from '../lib/utils-habit';
 import { toggleCompletion } from '../lib/storage';
@@ -29,29 +29,37 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
     return weeksArray;
   }, [fullView]);
 
+  useEffect(() => {
+    // Scroll to the rightmost (most recent) week on mount
+    const gridScroll = document.querySelector('.grid-scroll');
+    if (gridScroll) {
+      gridScroll.scrollLeft = gridScroll.scrollWidth;
+    }
+  }, []);
+
   const handleCellClick = (date) => {
     toggleCompletion(habit.id, formatDate(date));
     onUpdate();
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-      <div className="mb-4">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 pt-0 shadow-sm border border-slate-200 dark:border-slate-700">
+      <div className="mb-2">
         <h2 className="text-lg font-semibold mb-1">Activity Calendar</h2>
         <p className="text-sm text-muted-foreground">
           Tap any day to mark it as complete
         </p>
       </div>
 
-      <div className="overflow-x-auto grid-scroll">
-        <div className="inline-flex gap-1">
+      <div className="overflow-x-auto grid-scroll mt-2">
+        <div className="inline-flex gap-1 mb-4">
           {/* Weekday labels: Monday (top) to Sunday (bottom) */}
           <div className="flex flex-col gap-1 mr-2">
-            <div className="h-3" />
+            <div className="h-1" />
             {[1, 2, 3, 4, 5, 6, 0].map((day) => (
               <div
                 key={day}
-                className="h-3 flex items-center justify-end text-xs text-muted-foreground pr-1"
+                className="h-3 flex items-center justify-end text-xs text-muted-foreground pr-0"
               >
                 {getWeekdayLabel(day)}
               </div>
