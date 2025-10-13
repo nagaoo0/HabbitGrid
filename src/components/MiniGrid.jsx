@@ -5,9 +5,12 @@ import { toggleCompletion } from '../lib/storage';
 
 const MiniGrid = ({ habit, onUpdate }) => {
   const today = new Date();
+  // Show fewer days on mobile for better aspect ratio
+  const isMobile = window.innerWidth < 640; // Tailwind 'sm' breakpoint
+  const numDays = isMobile ? 14 : 28;
   const days = [];
   
-  for (let i = 27; i >= 0; i--) {
+  for (let i = numDays - 1; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
     days.push(date);
