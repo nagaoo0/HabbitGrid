@@ -11,23 +11,23 @@ import { exportData, importData, clearAllData } from '../lib/storage';
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
   const [notifications, setNotifications] = useState(false);
 
   useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
-  }, []);
-
-  const toggleDarkMode = (enabled) => {
-    setDarkMode(enabled);
-    if (enabled) {
+    if (darkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
+  }, [darkMode]);
+
+  const toggleDarkMode = (enabled) => {
+    setDarkMode(enabled);
   };
 
   const handleExport = () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Settings, TrendingUp, Flame, Calendar } from 'lucide-react';
+import { Plus, Settings, TrendingUp, Flame, Calendar, Moon, Sun } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
 import HabitCard from '../components/HabitCard';
@@ -12,10 +12,23 @@ const HomePage = () => {
   const { toast } = useToast();
   const [habits, setHabits] = useState([]);
   const [isPremium] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
 
   useEffect(() => {
     loadHabits();
   }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const loadHabits = () => {
     const loadedHabits = getHabits();
@@ -44,13 +57,7 @@ const HomePage = () => {
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-              <div className="grid grid-cols-4 gap-0.5">
-                {[...Array(11)].map((_, i) => (
-                  <div key={i} className="w-1.5 h-1.5 bg-white rounded-sm opacity-90" />
-                ))}
-              </div>
-            </div>
+            <img src="/assets/logo.png" alt="HabitGrid Logo" className="w-12 h-12 rounded-xl shadow-lg object-cover" />
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                 HabitGrid
@@ -58,14 +65,25 @@ const HomePage = () => {
               <p className="text-sm text-muted-foreground">Commit to yourself, one square at a time</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/settings')}
-            className="rounded-full"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDarkMode((prev) => !prev)}
+              className="rounded-full"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/settings')}
+              className="rounded-full"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+          </div>
         </motion.div>
 
         {/* Stats Overview */}
