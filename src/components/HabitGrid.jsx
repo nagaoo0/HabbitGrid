@@ -53,19 +53,6 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
 
       <div className="overflow-x-auto grid-scroll mt-2">
         <div className="inline-flex gap-1 mb-4">
-          {/* Weekday labels: Monday (top) to Sunday (bottom) */}
-          <div className="flex flex-col gap-1 mr-2">
-            <div className="h-1" />
-            {[1, 2, 3, 4, 5, 6, 0].map((day) => (
-              <div
-                key={day}
-                className="h-3 flex items-center justify-end text-xs text-muted-foreground pr-0"
-              >
-                {getWeekdayLabel(day)}
-              </div>
-            ))}
-          </div>
-
           {/* Grid: Monday (top) to Sunday (bottom) */}
           {weeks.map((week, weekIndex) => (
             <div key={weekIndex} className="flex flex-col gap-1">
@@ -100,6 +87,18 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
               })}
             </div>
           ))}
+          {/* Weekday labels: Monday (top) to Sunday (bottom) */}
+          <div className="flex flex-col gap-1 ml-2">
+            <div className="h-1" />
+            {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+              <div
+                key={day}
+                className="h-3 flex items-center justify-end text-xs text-muted-foreground pr-0"
+              >
+                {getWeekdayLabel(day)}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
