@@ -43,15 +43,15 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 pt-0 shadow-sm border border-slate-200 dark:border-slate-700">
-      <div className="mb-2">
-        <h2 className="text-lg font-semibold mb-1">Activity Calendar</h2>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 pt-0 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center">
+      <div className="mb-2 text-center w-full">
+        <h2 className="text-lg font-semibold mb-1 mt-4">Activity Calendar</h2>
         <p className="text-sm text-muted-foreground">
           Tap any day to mark it as complete
         </p>
       </div>
 
-      <div className="overflow-x-auto grid-scroll mt-2">
+      <div className="overflow-x-auto grid-scroll mt-2 w-full flex justify-center">
         <div className="inline-flex gap-1 mb-4">
           {/* Grid: Monday (top) to Sunday (bottom) */}
           {weeks.map((week, weekIndex) => (
