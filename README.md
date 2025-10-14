@@ -20,7 +20,7 @@ A modern, grid-based habit tracker app inspired by GitHub contribution graphs. T
 ### Installation
 ```powershell
 # Clone the repository
-git clone https://github.com/yourusername/habitgrid.git
+git clone https://github.com/nagaoo0/habitgrid.git
 cd habitgrid
 
 # Install dependencies
