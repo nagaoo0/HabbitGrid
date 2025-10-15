@@ -5,6 +5,8 @@ import { Plus, Settings, TrendingUp, Flame, Calendar, Moon, Sun } from 'lucide-r
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
 import HabitCard from '../components/HabitCard';
+import GitActivityGrid from '../components/GitActivityGrid';
+import { getGitEnabled } from '../lib/git';
 import { getHabits } from '../lib/storage';
 
 const HomePage = () => {
@@ -12,12 +14,14 @@ const HomePage = () => {
   const { toast } = useToast();
   const [habits, setHabits] = useState([]);
   const [isPremium] = useState(false);
+  const [gitEnabled, setGitEnabled] = useState(getGitEnabled());
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
   });
 
   useEffect(() => {
     loadHabits();
+    setGitEnabled(getGitEnabled());
   }, []);
 
   useEffect(() => {
@@ -110,6 +114,13 @@ const HomePage = () => {
                 {habits.reduce((sum, h) => sum + (h.currentStreak || 0), 0)}
               </p>
             </div>
+          </motion.div>
+        )}
+
+        {/* Git Activity */}
+        {gitEnabled && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-8">
+            <GitActivityGrid />
           </motion.div>
         )}
 

@@ -95,7 +95,8 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
           ))}
           {/* Weekday labels: Monday (top) to Sunday (bottom) */}
           <div className="flex flex-col gap-1 ml-2">
-            <div className="h-1" />
+            {/* Spacer matches month label height to align rows */}
+            <div className="h-3" />
             {[1, 2, 3, 4, 5, 6, 0].map((day) => (
               <div
                 key={day}
