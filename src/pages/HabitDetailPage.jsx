@@ -17,6 +17,15 @@ const HabitDetailPage = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
+    // Load and apply saved theme on mount
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
     loadHabit();
   }, [id]);
 
