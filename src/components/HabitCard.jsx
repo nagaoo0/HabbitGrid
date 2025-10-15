@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Flame } from 'lucide-react';
 import { Button } from './ui/button';
 import MiniGrid from './MiniGrid';
+import AnimatedCounter from './AnimatedCounter';
 
 const HabitCard = ({ habit, onUpdate }) => {
   const navigate = useNavigate();
@@ -27,10 +28,10 @@ const HabitCard = ({ habit, onUpdate }) => {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Flame className="w-4 h-4 text-orange-500" />
-              <span>{habit.currentStreak || 0} day streak</span>
+                <span><AnimatedCounter value={habit.currentStreak || 0} duration={800} /> day streak</span>
             </div>
             <span>•</span>
-            <span>Personal Record: {habit.longestStreak || 0} days</span>
+              <span>Personal Record: <AnimatedCounter value={habit.longestStreak || 0} duration={800} /> days</span>
           </div>
         </div>
         <Button

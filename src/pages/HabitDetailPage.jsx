@@ -7,6 +7,7 @@ import { useToast } from '../components/ui/use-toast';
 import HabitGrid from '../components/HabitGrid';
 import DeleteHabitDialog from '../components/DeleteHabitDialog';
 import { getHabit, deleteHabit } from '../lib/storage';
+import AnimatedCounter from '../components/AnimatedCounter';
 
 const HabitDetailPage = () => {
   const { id } = useParams();
@@ -56,8 +57,52 @@ const HabitDetailPage = () => {
     oldestDate = new Date(habit.completions.reduce((min, d) => d < min ? d : min, habit.completions[0]));
   }
 
+  // Calculate streaks of consecutive days
+  function getFullOpacityStreaks(completions) {
+    if (!completions || completions.length === 0) return [];
+    const sorted = [...completions].sort();
+    let streaks = [];
+    let currentStreak = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1]);
+      const curr = new Date(sorted[i]);
+      const diff = (curr - prev) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        currentStreak.push(sorted[i]);
+      } else {
+        if (currentStreak.length > 1) streaks.push([...currentStreak]);
+        currentStreak = [sorted[i]];
+      }
+    }
+    if (currentStreak.length > 1) streaks.push([...currentStreak]);
+    return streaks;
+  }
+
+  // Bonus: +2% per streak of 3+ full opacity days (capped at +10%)
+  const streaks = getFullOpacityStreaks(habit.completions);
+  const bonus = Math.min(streaks.filter(s => s.length >= 3).length * 2, 10);
+
   const completionRate = habit.completions.length > 0
-    ? Math.round((habit.completions.length / Math.max(1, Math.ceil((Date.now() - oldestDate.getTime()) / (1000 * 60 * 60 * 24)))) * 100)
+    ? (() => {
+        // Overall rate
+        const totalDays = Math.max(1, Math.ceil((Date.now() - oldestDate.getTime()) / (1000 * 60 * 60 * 24)));
+        const overallRate = habit.completions.length / totalDays;
+
+        // Last 30 days rate
+        const today = new Date();
+        const lastMonthStart = new Date(today);
+        lastMonthStart.setDate(today.getDate() - 29);
+        const lastMonthDates = [];
+        for (let d = new Date(lastMonthStart); d <= today; d.setDate(d.getDate() + 1)) {
+          lastMonthDates.push(d.toISOString().slice(0, 10));
+        }
+        const lastMonthCompletions = habit.completions.filter(dateStr => lastMonthDates.includes(dateStr));
+        const lastMonthRate = lastMonthCompletions.length / 30;
+
+        // Weighted blend: 70% last month, 30% overall
+        const blendedRate = (lastMonthRate * 0.7) + (overallRate * 0.3);
+        return Math.round(blendedRate * 100 + bonus);
+      })()
     : 0;
 
   return (
@@ -117,7 +162,7 @@ const HabitDetailPage = () => {
               </div>
               <span className="text-sm font-medium text-muted-foreground">Current Streak</span>
             </div>
-            <p className="text-3xl font-bold">{habit.currentStreak || 0}</p>
+            <p className="text-3xl font-bold"><AnimatedCounter value={habit.currentStreak || 0} duration={900} /></p>
             <p className="text-xs text-muted-foreground mt-1">days in a row</p>
           </div>
 
@@ -128,7 +173,7 @@ const HabitDetailPage = () => {
               </div>
               <span className="text-sm font-medium text-muted-foreground">Longest Streak</span>
             </div>
-            <p className="text-3xl font-bold">{habit.longestStreak || 0}</p>
+            <p className="text-3xl font-bold"><AnimatedCounter value={habit.longestStreak || 0} duration={900} /></p>
             <p className="text-xs text-muted-foreground mt-1">personal best</p>
           </div>
 
@@ -139,7 +184,7 @@ const HabitDetailPage = () => {
               </div>
               <span className="text-sm font-medium text-muted-foreground">Consistency Score!</span>
             </div>
-            <p className="text-3xl font-bold">{completionRate}%</p>
+            <p className="text-3xl font-bold"><AnimatedCounter value={completionRate} duration={900} format={v => `${v}%`} /></p>
             <p className="text-xs text-muted-foreground mt-1">overall progress</p>
           </div>
         </motion.div>

@@ -5,6 +5,7 @@ import { Plus, Settings, TrendingUp, Flame, Calendar, Moon, Sun } from 'lucide-r
 import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
 import HabitCard from '../components/HabitCard';
+import AnimatedCounter from '../components/AnimatedCounter';
 import GitActivityGrid from '../components/GitActivityGrid';
 import { getGitEnabled } from '../lib/git';
 import { getHabits } from '../lib/storage';
@@ -111,7 +112,7 @@ const HomePage = () => {
                 <span className="text-xs font-medium text-muted-foreground">Total Streaks</span>
               </div>
               <p className="text-2xl font-bold">
-                {habits.reduce((sum, h) => sum + (h.currentStreak || 0), 0)}
+                <AnimatedCounter value={habits.reduce((sum, h) => sum + (h.currentStreak || 0), 0)} duration={900} />
               </p>
             </div>
           </motion.div>

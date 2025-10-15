@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { GitBranch } from 'lucide-react';
 import { getCachedGitActivity } from '../lib/git';
 import { formatDate, isToday, getWeekdayLabel } from '../lib/utils-habit';
+import AnimatedCounter from './AnimatedCounter';
 
 const GitActivityGrid = () => {
   const [{ dailyCounts }, setData] = useState(() => getCachedGitActivity());
@@ -73,8 +74,13 @@ const GitActivityGrid = () => {
                       pointerEvents: 'none',
                       visibility: isFuture ? 'hidden' : 'visible',
                     }}
-                    title={`${dateStr} • ${count} commits`}
-                  />
+                    title={`${dateStr} • `}
+                  >
+                    {/* Animated commit count for tooltip */}
+                    <span style={{ display: 'none' }}>
+                      <AnimatedCounter value={count} duration={600} /> commits
+                    </span>
+                  </div>
                 );
               })}
             </div>
