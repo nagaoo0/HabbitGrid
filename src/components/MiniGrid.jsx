@@ -20,9 +20,10 @@ import { toggleCompletion } from '../lib/storage';
 
 const MiniGrid = ({ habit, onUpdate }) => {
   const today = new Date();
-  // Show fewer days on mobile for better aspect ratio
-  const isMobile = window.innerWidth < 640; // Tailwind 'sm' breakpoint
-  const numDays = isMobile ? 11 : 28;
+  // Dynamically calculate number of days that fit based on window width and cell size, max 28
+  const CELL_SIZE = 42; // px, matches w-8 h-8
+  const PADDING = 16; // px, for grid padding/margin
+  const numDays = Math.min(28, Math.max(5, Math.floor((window.innerWidth - PADDING) / CELL_SIZE)));
   const days = [];
   const scrollRef = React.useRef(null);
 
@@ -45,7 +46,7 @@ const MiniGrid = ({ habit, onUpdate }) => {
   };
 
   return (
-    <div ref={scrollRef} className="flex gap-1 overflow-x-auto grid-scroll pb-2">
+    <div ref={scrollRef} className="flex gap-1 overflow-x-auto grid-scroll pt-4 pb-2">
         {(() => {
           const frozenDays = getFrozenDays(habit.completions);
           return days.map((date, index) => {
@@ -78,7 +79,41 @@ const MiniGrid = ({ habit, onUpdate }) => {
                   )}
                   {/* Flame icon for full streak days */}
                   {isCompleted && intensity >= 1 && (
-                    <Flame className="w-5 h-5 absolute" style={{ color: lightenColor(habit.color, 0.4) }} />
+                    <motion.span
+                      className="relative flex items-center justify-center w-full h-full"
+                      initial={{ opacity: 0, scale: 0.2, rotate: -45 }}
+                      animate={{
+                        opacity: 1,
+                        scale: 1.3,
+                        rotate: [0, 10, -10, 0],
+                        transition: {
+                          duration: 0.7,
+                          delay: index * 0.13,
+                          type: 'spring',
+                          bounce: 0.7,
+                          stiffness: 180,
+                          onComplete: () => {},
+                        }
+                      }}
+                      whileHover={{ scale: 1.5, rotate: 10 }}
+                      whileTap={{ scale: 1.2, rotate: 0 }}
+                    >
+                      <motion.div
+                        animate={{ rotate: [0, 12, -12, 0] }}
+                        transition={{
+                          repeat: Infinity,
+                          repeatType: 'loop',
+                          duration: 2,
+                          ease: 'easeInOut',
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                      >
+                        <Flame
+                          className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 drop-shadow-lg"
+                          style={{ color: lightenColor(habit.color, 0.4), filter: 'brightness(1.3) drop-shadow(0 0 6px white)' }}
+                        />
+                      </motion.div>
+                    </motion.span>
                   )}
                 </motion.button>
                 <span className="text-[10px] text-muted-foreground mt-1">{dayLetter}</span>
