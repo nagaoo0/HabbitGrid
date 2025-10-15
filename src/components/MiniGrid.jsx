@@ -17,6 +17,7 @@ import { motion } from 'framer-motion';
 import { getColorIntensity, isToday, formatDate } from '../lib/utils-habit';
 import { getFrozenDays } from '../lib/utils-habit';
 import { toggleCompletion } from '../lib/storage';
+import { toast } from './ui/use-toast';
 
 const MiniGrid = ({ habit, onUpdate }) => {
   const today = new Date();
@@ -39,10 +40,33 @@ const MiniGrid = ({ habit, onUpdate }) => {
     days.push(date);
   }
 
-  const handleCellClick = (e, date) => {
+  const handleCellClick = async (e, date) => {
     e.stopPropagation();
-    toggleCompletion(habit.id, formatDate(date));
+    const dateStr = formatDate(date);
+    const isTodayCell = isToday(date);
+    const wasCompleted = habit.completions.includes(dateStr);
+    toggleCompletion(habit.id, dateStr);
     onUpdate();
+    // Only show encouragement toast if validating (adding) today's dot
+    if (isTodayCell && !wasCompleted) {
+      try {
+        const res = await fetch('/encouragements.json');
+        const messages = await res.json();
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+        toast({
+          title: '🎉 Keep Going!',
+          description: msg,
+          duration: 2500,
+        });
+      } catch (err) {
+        // fallback message
+        toast({
+          title: '🎉 Keep Going!',
+          description: 'Great job! Keep up the streak!',
+          duration: 2500,
+        });
+      }
+    }
   };
 
   return (

@@ -95,3 +95,20 @@
 .dark .grid-scroll::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
 }
+
+/* Toast custom animations */
+@keyframes toast-in {
+  0% { transform: scale(0.7) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-toast-in {
+  animation: toast-in 0.5s cubic-bezier(.68,-0.55,.27,1.55);
+}
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+.animate-float {
+  animation: float 2s infinite ease-in-out;
+}
