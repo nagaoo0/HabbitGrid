@@ -55,7 +55,17 @@ const MiniGrid = ({ habit, onUpdate }) => {
             const intensity = isCompleted ? getColorIntensity(habit.completions, dateStr) : 0;
             const isTodayCell = isToday(date);
             const dayLetter = date.toLocaleDateString('en-US', { weekday: 'short' })[0];
-            const isFrozen = frozenDays.includes(dateStr);
+            // Check if previous day was completed and next day is today
+            let isFrozen = frozenDays.includes(dateStr);
+            if (!isCompleted && !isTodayCell && index < days.length - 1 && index > 0) {
+              const prevDateStr = formatDate(days[index - 1]);
+              const nextDateStr = formatDate(days[index + 1]);
+              const prevCompleted = habit.completions.includes(prevDateStr);
+              const nextIsToday = isToday(days[index + 1]);
+              if (prevCompleted && nextIsToday) {
+                isFrozen = true;
+              }
+            }
             return (
               <div key={index} className="flex flex-col items-center">
                 <motion.button
@@ -75,7 +85,21 @@ const MiniGrid = ({ habit, onUpdate }) => {
                   title={dateStr}
                 >
                   {isFrozen && (
-                    <span role="img" aria-label="Frozen" style={{ fontSize: '1.2em' }}>❄️</span>
+                    <motion.span
+                      role="img"
+                      aria-label="Frozen"
+                      style={{ fontSize: '1.2em', filter: 'drop-shadow(0 0 8px #3b82f6)' }}
+                      initial={{ opacity: 0, y: -40, scale: 1.2 }}
+                      animate={{
+                        opacity: 1,
+                        y: [ -40, 8, -4, 0 ],
+                        scale: [ 1.2, 0.9, 1.05, 1 ],
+                        rotate: [ 0, -10, 10, -5, 0 ]
+                      }}
+                      transition={{ duration: 0.7, ease: 'easeInOut' }}
+                    >
+                      ❄️
+                    </motion.span>
                   )}
                   {/* Flame icon for full streak days */}
                   {isCompleted && intensity >= 1 && (
@@ -88,7 +112,7 @@ const MiniGrid = ({ habit, onUpdate }) => {
                         rotate: [0, 10, -10, 0],
                         transition: {
                           duration: 0.7,
-                          delay: index * 0.13,
+                          delay: (index / numDays) * 0.7,
                           type: 'spring',
                           bounce: 0.7,
                           stiffness: 180,
