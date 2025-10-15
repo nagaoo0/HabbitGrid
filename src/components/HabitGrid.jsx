@@ -1,9 +1,10 @@
 import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getColorIntensity, isToday, formatDate, getWeekdayLabel } from '../lib/utils-habit';
+import { getColorIntensity, isToday, formatDate, getWeekdayLabel, getFrozenDays } from '../lib/utils-habit';
 import { toggleCompletion } from '../lib/storage';
 
 const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
+  const frozenDays = getFrozenDays(habit.completions);
   const weeks = useMemo(() => {
     const today = new Date();
     // Find the Monday of the current week
@@ -67,13 +68,14 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
                 const intensity = isCompleted ? getColorIntensity(habit.completions, dateStr) : 0;
                 const isTodayCell = isToday(date);
                 const isFuture = date > new Date();
+                const isFrozen = frozenDays.includes(dateStr);
                 return (
                   <motion.button
                     key={dayIndex}
                     whileHover={{ scale: 1.15 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => handleCellClick(date)}
-                    className="habit-cell w-3 h-3 rounded-sm"
+                    className="habit-cell w-3 h-3 rounded-sm flex items-center justify-center"
                     style={{
                       backgroundColor: isCompleted ? habit.color : 'transparent',
                       opacity: isFuture ? 0 : (isCompleted ? 0.3 + (intensity * 0.7) : 1),
@@ -81,8 +83,12 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
                       pointerEvents: isFuture ? 'none' : 'auto',
                       visibility: isFuture ? 'hidden' : 'visible',
                     }}
-                    title={`${dateStr}${isCompleted ? ' ✓' : ''}`}
-                  />
+                    title={`${dateStr}${isCompleted ? ' ✓' : ''}${isFrozen ? ' (Frozen)' : ''}`}
+                  >
+                    {isFrozen && (
+                      <span role="img" aria-label="Frozen" style={{ fontSize: '0.7em' }}>❄️</span>
+                    )}
+                  </motion.button>
                 );
               })}
             </div>

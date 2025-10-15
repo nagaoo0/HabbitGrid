@@ -65,12 +65,15 @@ export const toggleCompletion = (habitId, dateStr) => {
   });
 };
 
+import { getFrozenDays } from './utils-habit.js';
 const calculateStreaks = (completions) => {
   if (completions.length === 0) {
     return { currentStreak: 0, longestStreak: 0 };
   }
-
-  const sortedDates = completions
+  // Only use frozen days for streak calculation
+  const frozenDays = getFrozenDays(completions);
+  const allValid = Array.from(new Set([...completions, ...frozenDays]));
+  const sortedDates = allValid
     .map(d => new Date(d))
     .sort((a, b) => b - a);
 
@@ -88,15 +91,12 @@ const calculateStreaks = (completions) => {
 
   if (mostRecent.getTime() === today.getTime() || mostRecent.getTime() === yesterday.getTime()) {
     currentStreak = 1;
-
     for (let i = 1; i < sortedDates.length; i++) {
       const current = new Date(sortedDates[i]);
       current.setHours(0, 0, 0, 0);
       const previous = new Date(sortedDates[i - 1]);
       previous.setHours(0, 0, 0, 0);
-
       const diffDays = Math.floor((previous - current) / (1000 * 60 * 60 * 24));
-
       if (diffDays === 1) {
         currentStreak++;
         tempStreak++;
@@ -112,9 +112,7 @@ const calculateStreaks = (completions) => {
     current.setHours(0, 0, 0, 0);
     const previous = new Date(sortedDates[i - 1]);
     previous.setHours(0, 0, 0, 0);
-
     const diffDays = Math.floor((previous - current) / (1000 * 60 * 60 * 24));
-
     if (diffDays === 1) {
       tempStreak++;
       longestStreak = Math.max(longestStreak, tempStreak);
@@ -124,9 +122,8 @@ const calculateStreaks = (completions) => {
   }
 
   longestStreak = Math.max(longestStreak, currentStreak, 1);
-
   return { currentStreak, longestStreak };
-};
+}
 
 export const exportData = () => {
   const habits = getHabits();
