@@ -181,24 +181,48 @@ async function fetchGitHubEvents({ baseUrl = 'https://api.github.com', username,
 }
 
 async function fetchGiteaLike({ baseUrl, username, token }, days = 365) {
-  const headers = { 'Accept': 'application/json' };
-  if (token) headers['Authorization'] = `token ${token}`;
+  let authMode = token ? 'token' : null; // 'token' | 'bearer' | null
   const counts = {};
-  for (let page = 1; page <= 5; page++) {
+  for (let page = 1; page <= 8; page++) {
     const url = `${baseUrl.replace(/\/$/, '')}/api/v1/users/${encodeURIComponent(username)}/events?limit=50&page=${page}`;
-    const res = await fetch(url, { headers });
-    if (!res.ok) break;
-    const events = await res.json();
+    let res;
+    try {
+      const headers = { 'Accept': 'application/json' };
+      if (token) headers['Authorization'] = authMode === 'bearer' ? `Bearer ${token}` : `token ${token}`;
+      res = await fetch(url, { headers });
+    } catch (e) {
+      break; // likely CORS/network
+    }
+    if (!res.ok) {
+      // Retry once with alternate auth scheme if unauthorized/forbidden
+      if ((res.status === 401 || res.status === 403) && token && authMode === 'token') {
+        authMode = 'bearer';
+        page--; // retry same page with Bearer
+        continue;
+      }
+      break;
+    }
+    let events;
+    try {
+      events = await res.json();
+    } catch {
+      break;
+    }
     if (!Array.isArray(events) || events.length === 0) break;
     for (const ev of events) {
       const created = ev?.created || ev?.created_at || ev?.timestamp;
       if (!created) continue;
       if (isOlderThan(created, days)) { page = 999; break; }
-      const action = ev?.op_type || ev?.action || ev?.type;
-      if (String(action).toLowerCase().includes('push')) {
-        const day = formatDate(new Date(created));
-        counts[day] = (counts[day] || 0) + 1;
-      }
+      const actionRaw = (ev?.op_type || ev?.action || ev?.type || '').toString().toLowerCase();
+      const isPushLike = actionRaw.includes('push') || actionRaw.includes('commit');
+      if (!isPushLike) continue;
+      const day = formatDate(new Date(created));
+      // Try to take number of commits if provided
+      let inc = 1;
+      if (typeof ev?.commits_count === 'number') inc = ev.commits_count;
+      else if (typeof ev?.payload?.num_commits === 'number') inc = ev.payload.num_commits;
+      else if (Array.isArray(ev?.payload?.commits)) inc = ev.payload.commits.length || 1;
+      counts[day] = (counts[day] || 0) + (inc || 1);
     }
   }
   return counts;
@@ -237,7 +261,8 @@ export async function fetchAllGitActivity({ force = false, days = 365 } = {}) {
   const perSource = [];
   for (const src of integrations) {
     const token = await decryptToken(src.tokenEnc);
-    const info = { baseUrl: src.baseUrl, username: src.username, token };
+    const baseUrl = src.baseUrl || (src.provider === 'gitea' || src.provider === 'forgejo' ? 'https://gitea.com' : undefined);
+    const info = { baseUrl, username: src.username, token };
     try {
       if (src.provider === 'github') {
         perSource.push(await fetchGitHubEvents(info, days));

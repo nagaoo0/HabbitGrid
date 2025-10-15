@@ -149,71 +149,7 @@ const SettingsPage = () => {
         </motion.div>
 
         <div className="space-y-4">
-          {/* Integrations */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700"
-          >
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><GitBranch className="w-4 h-4" /> Integrations</h2>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <Label htmlFor="git-enabled" className="text-base">Show Git Activity</Label>
-                <p className="text-sm text-muted-foreground">Display a unified Git activity grid</p>
-              </div>
-              <Switch id="git-enabled" checked={gitEnabled} onCheckedChange={toggleGitEnabled} />
-            </div>
 
-            <div className="grid sm:grid-cols-4 gap-2 mb-3">
-              <div>
-                <Label className="text-xs">Provider</Label>
-                <select className="w-full bg-transparent border rounded-md p-2" value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })}>
-                  <option value="github">GitHub</option>
-                  <option value="gitlab">GitLab</option>
-                  <option value="gitea">Gitea</option>
-                  <option value="forgejo">Forgejo</option>
-                  <option value="custom">Custom</option>
-                </select>
-              </div>
-              <div>
-                <Label className="text-xs">Base URL</Label>
-                <input className="w-full bg-transparent border rounded-md p-2" placeholder="e.g. https://api.github.com" value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} />
-              </div>
-              <div>
-                <Label className="text-xs">Username</Label>
-                <input className="w-full bg-transparent border rounded-md p-2" placeholder="your-username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
-              </div>
-              <div>
-                <Label className="text-xs">Token</Label>
-                <input className="w-full bg-transparent border rounded-md p-2" placeholder="personal access token" value={form.token} onChange={e => setForm({ ...form, token: e.target.value })} />
-              </div>
-            </div>
-            <Button onClick={handleAddSource} className="mb-4 rounded-full"><Plus className="w-4 h-4 mr-1" /> Add Source</Button>
-
-            <div className="flex items-center justify-between mt-2">
-              <Button variant="outline" onClick={handleSyncGit} disabled={syncing} className="rounded-full">
-                {syncing ? 'Syncing…' : 'Sync Git Data'}
-              </Button>
-              <span className="text-xs text-muted-foreground">{lastSync ? `Last sync: ${new Date(lastSync).toLocaleString()}` : ''}</span>
-            </div>
-
-            {sources.length > 0 && (
-              <div className="space-y-2">
-                {sources.map(src => (
-                  <div key={src.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 rounded-md p-2">
-                    <div className="text-sm">
-                      <div className="font-medium">{src.provider} • {src.username}</div>
-                      <div className="text-xs text-muted-foreground">{src.baseUrl}</div>
-                    </div>
-                    <Button size="icon" variant="ghost" onClick={() => handleRemoveSource(src.id)} className="rounded-full" aria-label="Remove Source">
-                      <Trash className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
           {/* Appearance */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -297,6 +233,72 @@ const SettingsPage = () => {
               <Trash2 className="w-4 h-4 mr-2" />
               Clear All Data
             </Button>
+          </motion.div>
+
+                    {/* Integrations */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700"
+          >
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><GitBranch className="w-4 h-4" /> Integrations</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <Label htmlFor="git-enabled" className="text-base">Show Git Activity</Label>
+                <p className="text-sm text-muted-foreground">Display a unified Git activity grid</p>
+              </div>
+              <Switch id="git-enabled" checked={gitEnabled} onCheckedChange={toggleGitEnabled} />
+            </div>
+
+            <div className="grid sm:grid-cols-4 gap-2 mb-3">
+              <div>
+                <Label className="text-xs">Provider</Label>
+                <select className="w-full bg-transparent border rounded-md p-2" value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value })}>
+                  <option value="github">GitHub</option>
+                  <option value="gitlab">GitLab</option>
+                  <option value="gitea">Gitea</option>
+                  <option value="forgejo">Forgejo</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">Base URL</Label>
+                <input className="w-full bg-transparent border rounded-md p-2" placeholder="GitHub: https://api.github.com • GitLab: https://gitlab.com • Gitea/Forgejo: https://your.instance" value={form.baseUrl} onChange={e => setForm({ ...form, baseUrl: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Username</Label>
+                <input className="w-full bg-transparent border rounded-md p-2" placeholder="your-username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Token</Label>
+                <input className="w-full bg-transparent border rounded-md p-2" placeholder="personal access token" value={form.token} onChange={e => setForm({ ...form, token: e.target.value })} />
+              </div>
+            </div>
+            <Button onClick={handleAddSource} className="mb-4 rounded-full"><Plus className="w-4 h-4 mr-1" /> Add Source</Button>
+
+            <div className="flex items-center justify-between mt-2">
+              <Button variant="outline" onClick={handleSyncGit} disabled={syncing} className="rounded-full">
+                {syncing ? 'Syncing…' : 'Sync Git Data'}
+              </Button>
+              <span className="text-xs text-muted-foreground">{lastSync ? `Last sync: ${new Date(lastSync).toLocaleString()}` : ''}</span>
+            </div>
+
+            {sources.length > 0 && (
+              <div className="space-y-2">
+                {sources.map(src => (
+                  <div key={src.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 rounded-md p-2">
+                    <div className="text-sm">
+                      <div className="font-medium">{src.provider} • {src.username}</div>
+                      <div className="text-xs text-muted-foreground">{src.baseUrl}</div>
+                    </div>
+                    <Button size="icon" variant="ghost" onClick={() => handleRemoveSource(src.id)} className="rounded-full" aria-label="Remove Source">
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* About */}
