@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Settings, TrendingUp, Flame, Calendar, Moon, Sun } from 'lucide-react';
@@ -8,12 +9,13 @@ import HabitCard from '../components/HabitCard';
 import AnimatedCounter from '../components/AnimatedCounter';
 import GitActivityGrid from '../components/GitActivityGrid';
 import { getGitEnabled } from '../lib/git';
-import { getHabits } from '../lib/storage';
+import { getHabits, updateHabit } from '../lib/storage';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [habits, setHabits] = useState([]);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
   const [isPremium] = useState(false);
   const [gitEnabled, setGitEnabled] = useState(getGitEnabled());
   const [darkMode, setDarkMode] = useState(() => {
@@ -37,7 +39,23 @@ const HomePage = () => {
 
   const loadHabits = () => {
     const loadedHabits = getHabits();
+    // Sort by sortOrder if present, then fallback to createdAt
+    loadedHabits.sort((a, b) => {
+      if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
+      if (a.sortOrder !== undefined) return -1;
+      if (b.sortOrder !== undefined) return 1;
+      return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+    });
     setHabits(loadedHabits);
+    // Initialize collapsed state for new categories
+    const categories = Array.from(new Set(loadedHabits.map(h => h.category || 'Uncategorized')));
+    setCollapsedGroups(prev => {
+      const next = { ...prev };
+      categories.forEach(cat => {
+        if (!(cat in next)) next[cat] = false;
+      });
+      return next;
+    });
   };
 
   const handleAddHabit = () => {
@@ -126,21 +144,178 @@ const HomePage = () => {
         )}
 
         {/* Habits List */}
-        <div className="space-y-4">
-          <AnimatePresence mode="popLayout">
-            {habits.map((habit, index) => (
-              <motion.div
-                key={habit.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <HabitCard habit={habit} onUpdate={loadHabits} />
-              </motion.div>
+        {/* Grouped Habits by Category, collapsible, and uncategorized habits outside */}
+        <DragDropContext
+          onDragEnd={result => {
+            if (!result.destination) return;
+            const { source, destination } = result;
+            // Get all habits grouped by category
+            const uncategorized = habits.filter(h => !h.category);
+            const categorized = habits.filter(h => h.category);
+            const grouped = categorized.reduce((acc, habit) => {
+              const cat = habit.category;
+              if (!acc[cat]) acc[cat] = [];
+              acc[cat].push(habit);
+              return acc;
+            }, {});
+
+            let newHabits = [...habits];
+
+            // If dropping into uncategorized, always unset category
+            if (destination.droppableId === 'uncategorized') {
+              let items, removed;
+              if (source.droppableId === 'uncategorized') {
+                // Reorder within uncategorized
+                items = Array.from(uncategorized);
+                [removed] = items.splice(source.index, 1);
+              } else {
+                // Move from category to uncategorized
+                items = Array.from(uncategorized);
+                const sourceItems = Array.from(grouped[source.droppableId]);
+                [removed] = sourceItems.splice(source.index, 1);
+                removed.category = '';
+                grouped[source.droppableId] = sourceItems;
+              }
+              // Always set category to ''
+              removed.category = '';
+              items.splice(destination.index, 0, removed);
+              items.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: '' }));
+              newHabits = [
+                ...items,
+                ...Object.values(grouped).flat()
+              ];
+            } else if (source.droppableId === 'uncategorized' && grouped[destination.droppableId]) {
+              // Move from uncategorized to category
+              const items = Array.from(uncategorized);
+              const [removed] = items.splice(source.index, 1);
+              removed.category = destination.droppableId;
+              const destItems = Array.from(grouped[destination.droppableId] || []);
+              destItems.splice(destination.index, 0, removed);
+              destItems.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: h.category }));
+              newHabits = [
+                ...items,
+                ...Object.values({ ...grouped, [destination.droppableId]: destItems }).flat()
+              ];
+            } else if (grouped[source.droppableId] && grouped[destination.droppableId]) {
+              // Move within or between categories
+              const sourceItems = Array.from(grouped[source.droppableId]);
+              const [removed] = sourceItems.splice(source.index, 1);
+              if (source.droppableId === destination.droppableId) {
+                // Reorder within same category
+                sourceItems.splice(destination.index, 0, removed);
+                sourceItems.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: h.category }));
+                grouped[source.droppableId] = sourceItems;
+              } else {
+                // Move to another category
+                const destItems = Array.from(grouped[destination.droppableId] || []);
+                removed.category = destination.droppableId;
+                destItems.splice(destination.index, 0, removed);
+                destItems.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: h.category }));
+                grouped[source.droppableId] = sourceItems;
+                grouped[destination.droppableId] = destItems;
+              }
+              // Flatten
+              newHabits = [
+                ...uncategorized,
+                ...Object.values(grouped).flat()
+              ];
+            }
+            setTimeout(loadHabits, 100); // reload after update
+          }}
+        >
+          <div className="space-y-6">
+            {/* Uncategorized habits (no group panel) */}
+            <Droppable droppableId="uncategorized" type="HABIT">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4">
+                  {habits.filter(h => !h.category).map((habit, index) => (
+                    <Draggable key={habit.id} draggableId={habit.id} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{ ...provided.draggableProps.style, zIndex: snapshot.isDragging ? 10 : undefined }}
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <HabitCard habit={habit} onUpdate={loadHabits} />
+                          </motion.div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+            {/* Group panels for named categories */}
+            {Object.entries(
+              habits.filter(h => h.category).reduce((acc, habit) => {
+                const cat = habit.category;
+                if (!acc[cat]) acc[cat] = [];
+                acc[cat].push(habit);
+                return acc;
+              }, {})
+            ).map(([category, groupHabits], groupIdx) => (
+              <div key={category} className="bg-white/60 dark:bg-slate-800/60 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <button
+                  className="w-full flex items-center justify-between px-6 py-3 text-lg font-semibold focus:outline-none select-none hover:bg-slate-100 dark:hover:bg-slate-900 rounded-2xl transition"
+                  onClick={() => setCollapsedGroups(prev => ({ ...prev, [category]: !prev[category] }))}
+                  aria-expanded={!collapsedGroups[category]}
+                >
+                  <span>{category}</span>
+                  <span className={`transition-transform ${collapsedGroups[category] ? 'rotate-90' : ''}`}>▶</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {!collapsedGroups[category] && (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <Droppable droppableId={category} type="HABIT">
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4 px-4 pb-4">
+                            {groupHabits.map((habit, index) => (
+                              <Draggable key={habit.id} draggableId={habit.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    style={{ ...provided.draggableProps.style, zIndex: snapshot.isDragging ? 10 : undefined }}
+                                  >
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.95 }}
+                                      transition={{ delay: index * 0.05 }}
+                                    >
+                                      <HabitCard habit={habit} onUpdate={loadHabits} />
+                                    </motion.div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ))}
-          </AnimatePresence>
-        </div>
+          </div>
+        </DragDropContext>
 
         {/* Empty State */}
         {habits.length === 0 && (

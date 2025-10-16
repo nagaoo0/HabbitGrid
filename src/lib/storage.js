@@ -20,6 +20,7 @@ export const saveHabit = (habit) => {
   const newHabit = {
     ...habit,
     id: Date.now().toString(),
+    sortOrder: habits.length,
   };
   habits.push(newHabit);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));

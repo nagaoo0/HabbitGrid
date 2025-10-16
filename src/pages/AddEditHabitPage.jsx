@@ -17,6 +17,7 @@ const AddEditHabitPage = () => {
 
   const [name, setName] = useState('');
   const [color, setColor] = useState('#22c55e');
+  const [category, setCategory] = useState('');
 
   useEffect(() => {
     if (isEdit) {
@@ -24,6 +25,7 @@ const AddEditHabitPage = () => {
       if (habit) {
         setName(habit.name);
         setColor(habit.color);
+        if (habit.category) setCategory(habit.category);
       } else {
         toast({
           title: "Habit not found",
@@ -48,7 +50,7 @@ const AddEditHabitPage = () => {
     }
 
     if (isEdit) {
-      updateHabit(id, { name: name.trim(), color });
+      updateHabit(id, { name: name.trim(), color, category: category.trim() });
       toast({
         title: "✅ Habit updated",
         description: "Your habit has been updated successfully.",
@@ -57,6 +59,7 @@ const AddEditHabitPage = () => {
       saveHabit({
         name: name.trim(),
         color,
+        category: category.trim(),
         completions: [],
         currentStreak: 0,
         longestStreak: 0,
@@ -121,6 +124,19 @@ const AddEditHabitPage = () => {
               </p>
             </div>
 
+            {/* Category Input */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Category <span className="text-xs text-muted-foreground">(optional)</span></Label>
+              <Input
+                id="category"
+                placeholder="e.g., Health, Reading, Mindfulness"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="text-lg"
+                maxLength={30}
+              />
+            </div>
+
             {/* Color Picker */}
             <div className="space-y-2">
               <Label>Habit Color</Label>
@@ -137,6 +153,9 @@ const AddEditHabitPage = () => {
                     style={{ backgroundColor: color }}
                   />
                   <span className="font-medium">{name || 'Your Habit Name'}</span>
+                  {category && (
+                    <span className="ml-2 px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-200">{category}</span>
+                  )}
                 </div>
                 <div className="flex gap-1">
                   {[...Array(14)].map((_, i) => (
