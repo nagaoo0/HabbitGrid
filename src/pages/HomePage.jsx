@@ -16,7 +16,6 @@ const HomePage = () => {
   const { toast } = useToast();
   const [habits, setHabits] = useState([]);
   const [collapsedGroups, setCollapsedGroups] = useState({});
-  const [isPremium] = useState(false);
   const [gitEnabled, setGitEnabled] = useState(getGitEnabled());
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
@@ -59,14 +58,6 @@ const HomePage = () => {
   };
 
   const handleAddHabit = () => {
-    if (!isPremium && habits.length >= 1000) {
-      toast({
-        title: "🔒 Premium Feature",
-        description: "Free tier limited to 1000 habits. Upgrade to unlock unlimited habits!",
-        duration: 4000,
-      });
-      return;
-    }
     navigate('/add');
   };
 
