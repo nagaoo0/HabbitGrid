@@ -1,6 +1,23 @@
 # HabitGrid
 
+
 A modern, grid-based habit tracker app inspired by GitHub contribution graphs. Track your daily habits, visualize progress, and build streaks with a beautiful, responsive UI.
+
+---
+
+<p align="center">
+  <a href="https://github.com/nagaoo0/HabitGrid" target="_blank"><img src="https://img.shields.io/github/stars/nagaoo0/HabitGrid?style=social" alt="GitHub stars"></a>
+  <a href="https://github.com/nagaoo0/HabitGrid" target="_blank"><img src="https://img.shields.io/github/license/nagaoo0/HabitGrid?color=blue" alt="MIT License"></a>
+  <a href="https://git.mihajlociric.com/count0/HabitGrid" target="_blank"><img src="https://img.shields.io/badge/Mirror-git.mihajlociric.com-orange?logo=gitea" alt="Gitea Mirror"></a>
+</p>
+
+---
+
+**Source code:**
+
+- [GitHub Repository](https://github.com/nagaoo0/HabitGrid)
+- [Self-hosted Mirror (Gitea)](https://git.mihajlociric.com/count0/HabitGrid)
+
 
 ## Features
 - GitHub-style habit grid (calendar view)
@@ -10,6 +27,8 @@ A modern, grid-based habit tracker app inspired by GitHub contribution graphs. T
 - Data export/import (JSON backup)
 - Responsive design (desktop & mobile)
 - Built with React, Vite, Tailwind CSS, Radix UI, and Framer Motion
+
+---
 
 ## Getting Started
 
@@ -68,7 +87,18 @@ You can easily deploy your own instance of HabitGrid using [Cloudflare Pages](ht
 5. Deploy and enjoy your own habit tracker online!
 
 ## License
+
 MIT
+
+---
+
+**Project Links:**
+
+- [Live Demo](https://myhabitgrid.com/)
+- [GitHub](https://github.com/nagaoo0/HabitGrid)
+- [Mirror (Gitea)](https://git.mihajlociric.com/count0/HabitGrid)
+
+---
 
 ---
 
