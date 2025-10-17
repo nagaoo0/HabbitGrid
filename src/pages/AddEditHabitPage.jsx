@@ -9,6 +9,12 @@ import { useToast } from '../components/ui/use-toast';
 import ColorPicker from '../components/ColorPicker';
 import { getHabits, saveHabit, updateHabit } from '../lib/datastore';
 
+// Local helper to get habit by id from localStorage
+function getHabit(id) {
+  const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+  return habits.find(h => h.id === id);
+}
+
 const AddEditHabitPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
