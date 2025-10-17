@@ -2,6 +2,15 @@
 import { supabase } from './supabase';
 const STORAGE_KEY = 'habitgrid_data';
 
+// UUID v4 generator for local/offline usage
+function generateUUID() {
+  if (typeof window !== 'undefined' && window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export const getHabits = () => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -56,14 +65,21 @@ const remoteMirrorDelete = async (id) => {
 
 export const saveHabit = (habit) => {
   const habits = getHabits();
+  // Respect provided id (e.g., UUID from AddEdit or datastore). Generate only if missing.
+  const id = habit.id || generateUUID();
+  const existingIndex = habits.findIndex(h => h.id === id);
   const newHabit = {
     ...habit,
-    id: Date.now().toString(),
-    sortOrder: habits.length,
-    createdAt: nowIso(),
+    id,
+    sortOrder: habit.sortOrder ?? habits.length,
+    createdAt: habit.createdAt || nowIso(),
     updatedAt: nowIso(),
   };
-  habits.push(newHabit);
+  if (existingIndex >= 0) {
+    habits[existingIndex] = newHabit;
+  } else {
+    habits.push(newHabit);
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
   remoteMirrorUpsert(newHabit);
   return newHabit;

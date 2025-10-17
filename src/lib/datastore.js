@@ -100,7 +100,11 @@ export async function saveHabit(habit) {
     created_at: now,
     updated_at: now,
   };
-  const { data, error } = await supabase.from('habits').insert(insert).select('*').single();
+  const { data, error } = await supabase
+    .from('habits')
+    .upsert(insert, { onConflict: 'id' })
+    .select('*')
+    .single();
   if (error) {
     console.warn('Supabase saveHabit error, writing local:', error.message);
     return local.saveHabit({ ...habit, id });
@@ -210,6 +214,8 @@ export async function syncLocalToRemoteIfNeeded() {
     let habits = local.getHabits();
     if (habits.length === 0) return localStorage.setItem(SYNC_FLAG, new Date().toISOString());
     habits = ensureUUIDs(habits);
+    // Persist back to local so IDs match remote after upsert
+    localStorage.setItem('habitgrid_data', JSON.stringify(habits));
     const rows = habits.map(h => ({
       id: h.id,
       user_id: user.id,
