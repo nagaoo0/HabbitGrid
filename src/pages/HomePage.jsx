@@ -15,6 +15,8 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [habits, setHabits] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [gitEnabled, setGitEnabled] = useState(getGitEnabled());
   const [darkMode, setDarkMode] = useState(() => {
@@ -23,13 +25,16 @@ const HomePage = () => {
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       // On login, pull remote habits into localStorage
       const user = await getAuthUser();
+      setLoggedIn(!!user);
       if (user) {
         await syncRemoteToLocal();
       }
       await loadHabits();
       setGitEnabled(getGitEnabled());
+      setLoading(false);
     })();
     // Background sync every 10s if logged in
     const interval = setInterval(() => {
@@ -326,29 +331,42 @@ const HomePage = () => {
           </div>
         </DragDropContext>
 
-        {/* Empty State */}
+        {/* Empty State or Loading Buffer */}
         {habits.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16"
-          >
-            <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <Flame className="w-12 h-12 text-green-600 dark:text-green-400" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Create your grid!</h2>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Create your first habit and watch your progress every day as you fill in the squares. Small steps lead to big changes!
-            </p>
-            <Button
-              onClick={handleAddHabit}
-              size="lg"
-              className="rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          loading && loggedIn ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-20"
             >
-              <Plus className="w-5 h-5 mr-2" />
-              Create First Habit
-            </Button>
-          </motion.div>
+              <div className="w-16 h-16 mb-6 flex items-center justify-center">
+                <span className="inline-block w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></span>
+              </div>
+              <h2 className="text-xl font-semibold text-muted-foreground">Loading your habits...</h2>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-16"
+            >
+              <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Flame className="w-12 h-12 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Create your grid!</h2>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                Create your first habit and watch your progress every day as you fill in the squares. Small steps lead to big changes!
+              </p>
+              <Button
+                onClick={handleAddHabit}
+                size="lg"
+                className="rounded-full shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Create First Habit
+              </Button>
+            </motion.div>
+          )
         )}
 
         {/* Add Button */}
