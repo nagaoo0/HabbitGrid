@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Moon, Sun, Bell, Download, Upload, Trash2, Plus, Trash, GitBranch, Flame } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { Separator } from '../components/ui/separator';
 import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { useToast } from '../components/ui/use-toast';
@@ -390,14 +391,33 @@ const SettingsPage = () => {
           >
             <h2 className="text-lg font-semibold mb-2">About HabitGrid</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Version 1.0.0 • Built with ❤️ for habit builders
+              Version 1.1.0 • Built by <a href="https://www.mihajlociric.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"> Mihajlo Ciric </a> with ❤️ 
             </p>
+            <Separator />
             <p className="text-xs text-muted-foreground">
-              Track your habits with a beautiful GitHub-style contribution grid. 
-              Build streaks, visualize progress, and commit to yourself daily.
+              This project is open-source and available on <a href="https://github.com/nagaoo0/HabitGrid" target="_blank" rel="noopener noreferrer" className="underline text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">GitHub</a> and mirrored on <a href="https://git.mihajlociric.com/count0/HabitGrid" target="_blank" rel="noopener noreferrer" className="underline text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300">git.mihajlociric.com</a>. If you enjoy using HabitGrid, please consider starring the repository and sharing it with others!
+              If you encounter any issues or have suggestions, feel free to open an issue or contribute.
             </p>
           </motion.div>
         </div>
+      </div>
+      {/* GitHub Icon Button at the bottom */}
+      <div className="flex justify-center gap-4 mt-8">
+        <a href="https://github.com/nagaoo0/HabitGrid" target="_blank" rel="noopener noreferrer">
+          <Button variant="ghost" size="icon" className="rounded-full" aria-label="GitHub Repository">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-slate-700 dark:text-slate-200">
+              <path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.186 6.839 9.525.5.092.682-.217.682-.483 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.091-.646.35-1.088.636-1.34-2.221-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.254-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.396.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.337 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.579.688.481C19.138 20.204 22 16.447 22 12.021 22 6.484 17.523 2 12 2z" />
+            </svg>
+          </Button>
+        </a>
+        <a href="https://git.mihajlociric.com/count0/HabitGrid" target="_blank" rel="noopener noreferrer">
+          <Button variant="ghost" size="icon" className="rounded-full" aria-label="Git Mirror Repository">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-7 h-7" fill="none">
+              <rect width="32" height="32" rx="16" fill="#F7931E"/>
+              <path d="M16 7C11.03 7 7 11.03 7 16C7 20.97 11.03 25 16 25C20.97 25 25 20.97 25 16C25 11.03 20.97 7 16 7ZM16 23.5C12.14 23.5 9 20.36 9 16.5C9 12.64 12.14 9.5 16 9.5C19.86 9.5 23 12.64 23 16.5C23 20.36 19.86 23.5 16 23.5ZM16 12C14.07 12 12.5 13.57 12.5 15.5C12.5 17.43 14.07 19 16 19C17.93 19 19.5 17.43 19.5 15.5C19.5 13.57 17.93 12 16 12Z" fill="#fff"/>
+            </svg>
+          </Button>
+        </a>
       </div>
     </div>
   );
