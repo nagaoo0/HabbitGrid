@@ -221,30 +221,31 @@ function mergeHabits(localHabits, remoteHabits) {
   return Array.from(map.values());
 }
 
+
 export async function syncRemoteToLocal() {
   const user = await getAuthUser();
   if (!user) return;
   const remote = await getHabits();
   const localHabits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
 
-  // Backup local data before any destructive change
-  backupLocalHabits();
+  // Only backup on first login sync (not every refresh)
+  const backupFlag = 'habitgrid_backup_done';
+  if (!localStorage.getItem(backupFlag)) {
+    backupLocalHabits();
+    localStorage.setItem(backupFlag, '1');
+  }
 
   // If both local and remote have data, merge and update both
   if (localHabits.length && remote.length) {
     const merged = mergeHabits(localHabits, remote);
     localStorage.setItem('habitgrid_data', JSON.stringify(merged));
-    // Optionally, upsert merged to remote as well
     await supabase.from('habits').upsert(merged, { onConflict: 'id' });
   } else if (!remote.length && localHabits.length) {
-    // Remote empty, local has data: push local to remote
     await supabase.from('habits').upsert(localHabits, { onConflict: 'id' });
     localStorage.setItem('habitgrid_data', JSON.stringify(localHabits));
   } else if (remote.length && !localHabits.length) {
-    // Local empty, remote has data: pull remote to local
     localStorage.setItem('habitgrid_data', JSON.stringify(remote));
-  } // else both empty: do nothing
+  }
 
-  // Notify UI to reload if listening
   window.dispatchEvent(new CustomEvent('habitgrid-sync-updated'));
 }
