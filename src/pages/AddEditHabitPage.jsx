@@ -51,7 +51,7 @@ const AddEditHabitPage = () => {
     }
   }, [id, isEdit, navigate, toast]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -78,8 +78,7 @@ const AddEditHabitPage = () => {
         description: "Your habit has been updated successfully.",
       });
     } else {
-      // Add to localStorage for instant UI
-      const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+      // Single source of truth: delegate to datastore; it will handle local or remote as needed
       const newHabit = {
         id: generateUUID(),
         name: name.trim(),
@@ -90,11 +89,8 @@ const AddEditHabitPage = () => {
         longestStreak: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        sortOrder: habits.length,
       };
-      habits.push(newHabit);
-      localStorage.setItem('habitgrid_data', JSON.stringify(habits));
-      saveHabit(newHabit); // background sync
+      await saveHabit(newHabit);
       toast({
         title: "✅ Habit created",
         description: "Your new habit is ready to track!",
