@@ -1,3 +1,27 @@
+// UUID v4 generator (browser safe)
+function generateUUID() {
+  if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+  // Fallback for older browsers
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// UUID v4 validator
+function isValidUUID(id) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+}
+
+// Ensure all habits in an array have valid UUIDs (returns new array)
+function ensureUUIDs(habits) {
+  return habits.map(h => {
+    if (!h.id || !isValidUUID(h.id)) {
+      return { ...h, id: generateUUID() };
+    }
+    return h;
+  });
+}
 import { supabase, isSupabaseConfigured } from './supabase';
 import * as local from './storage';
 
@@ -61,7 +85,10 @@ export async function saveHabit(habit) {
   if (!(await isLoggedIn())) return local.saveHabit(habit);
   const now = new Date().toISOString();
   const { data: auth } = await supabase.auth.getUser();
+  // Ensure UUID for new habit
+  const id = habit.id && isValidUUID(habit.id) ? habit.id : generateUUID();
   const insert = {
+    id,
     user_id: auth?.user?.id,
     name: habit.name,
     color: habit.color,
@@ -76,7 +103,7 @@ export async function saveHabit(habit) {
   const { data, error } = await supabase.from('habits').insert(insert).select('*').single();
   if (error) {
     console.warn('Supabase saveHabit error, writing local:', error.message);
-    return local.saveHabit(habit);
+    return local.saveHabit({ ...habit, id });
   }
   return {
     id: data.id,
@@ -129,11 +156,13 @@ export async function toggleCompletion(habitId, dateStr) {
 
 export async function exportData() {
   // Always export from local snapshot for portability
-  const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+  let habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+  habits = ensureUUIDs(habits);
   // If logged in, merge with remote and upsert remote
   if (await isLoggedIn()) {
     const remote = await getHabits();
-    const merged = mergeHabits(habits, remote);
+    let merged = mergeHabits(habits, remote);
+    merged = ensureUUIDs(merged);
     await supabase.from('habits').upsert(merged, { onConflict: 'id' });
     return JSON.stringify(merged, null, 2);
   }
@@ -143,17 +172,23 @@ export async function exportData() {
 
 export async function importData(jsonString) {
   // Import to local
-  const imported = local.importData(jsonString);
+  let imported = local.importData(jsonString);
+  // Always ensure UUIDs for imported data
+  let importedArr = Array.isArray(imported) ? imported : JSON.parse(jsonString);
+  importedArr = ensureUUIDs(importedArr);
   // If logged in, merge with remote and upsert
   if (await isLoggedIn()) {
     const user = await getAuthUser();
     const remote = await getHabits();
-    const importedArr = Array.isArray(imported) ? imported : JSON.parse(jsonString);
-    const merged = mergeHabits(importedArr, remote);
+    let merged = mergeHabits(importedArr, remote);
+    merged = ensureUUIDs(merged);
     localStorage.setItem('habitgrid_data', JSON.stringify(merged));
     await supabase.from('habits').upsert(merged, { onConflict: 'id' });
+    return merged;
+  } else {
+    localStorage.setItem('habitgrid_data', JSON.stringify(importedArr));
+    return importedArr;
   }
-  return imported;
 }
 
 export async function clearAllData() {
@@ -172,10 +207,11 @@ export async function syncLocalToRemoteIfNeeded() {
   if (error) return;
 
   if (!already || (remote || []).length === 0) {
-    const habits = local.getHabits();
+    let habits = local.getHabits();
     if (habits.length === 0) return localStorage.setItem(SYNC_FLAG, new Date().toISOString());
+    habits = ensureUUIDs(habits);
     const rows = habits.map(h => ({
-      id: h.id && h.id.length > 0 ? h.id : undefined,
+      id: h.id,
       user_id: user.id,
       name: h.name,
       color: h.color,
@@ -237,14 +273,17 @@ export async function syncRemoteToLocal() {
 
   // If both local and remote have data, merge and update both
   if (localHabits.length && remote.length) {
-    const merged = mergeHabits(localHabits, remote);
+    let merged = mergeHabits(localHabits, remote);
+    merged = ensureUUIDs(merged);
     localStorage.setItem('habitgrid_data', JSON.stringify(merged));
     await supabase.from('habits').upsert(merged, { onConflict: 'id' });
   } else if (!remote.length && localHabits.length) {
-    await supabase.from('habits').upsert(localHabits, { onConflict: 'id' });
-    localStorage.setItem('habitgrid_data', JSON.stringify(localHabits));
+    let ensured = ensureUUIDs(localHabits);
+    await supabase.from('habits').upsert(ensured, { onConflict: 'id' });
+    localStorage.setItem('habitgrid_data', JSON.stringify(ensured));
   } else if (remote.length && !localHabits.length) {
-    localStorage.setItem('habitgrid_data', JSON.stringify(remote));
+    let ensured = ensureUUIDs(remote);
+    localStorage.setItem('habitgrid_data', JSON.stringify(ensured));
   }
 
   window.dispatchEvent(new CustomEvent('habitgrid-sync-updated'));
