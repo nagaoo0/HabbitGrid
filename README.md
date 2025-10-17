@@ -102,5 +102,4 @@ MIT
 
 ---
 
-*Built with ❤️ by Mihajlo Ciric*
-````
+*Built with ❤️ by [Mihajlo Ciric](https://mihajlociric.com/)*
