@@ -126,15 +126,34 @@ export async function toggleCompletion(habitId, dateStr) {
   return updateHabit(habitId, { completions });
 }
 
+
 export async function exportData() {
   // Always export from local snapshot for portability
-  const habits = await getHabits();
+  const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+  // If logged in, merge with remote and upsert remote
+  if (await isLoggedIn()) {
+    const remote = await getHabits();
+    const merged = mergeHabits(habits, remote);
+    await supabase.from('habits').upsert(merged, { onConflict: 'id' });
+    return JSON.stringify(merged, null, 2);
+  }
   return JSON.stringify(habits, null, 2);
 }
 
+
 export async function importData(jsonString) {
-  // Always import to local; remote sync will push on login
-  return local.importData(jsonString);
+  // Import to local
+  const imported = local.importData(jsonString);
+  // If logged in, merge with remote and upsert
+  if (await isLoggedIn()) {
+    const user = await getAuthUser();
+    const remote = await getHabits();
+    const importedArr = Array.isArray(imported) ? imported : JSON.parse(jsonString);
+    const merged = mergeHabits(importedArr, remote);
+    localStorage.setItem('habitgrid_data', JSON.stringify(merged));
+    await supabase.from('habits').upsert(merged, { onConflict: 'id' });
+  }
+  return imported;
 }
 
 export async function clearAllData() {
@@ -173,12 +192,59 @@ export async function syncLocalToRemoteIfNeeded() {
   }
 }
 
+
+// Helper: Download JSON backup of local habits
+function backupLocalHabits() {
+  const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+  if (!habits.length) return;
+  const blob = new Blob([JSON.stringify(habits, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `habitgrid-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Helper: Merge two habit arrays by id, prefer latest updatedAt
+function mergeHabits(localHabits, remoteHabits) {
+  const map = new Map();
+  [...localHabits, ...remoteHabits].forEach(h => {
+    if (!map.has(h.id)) {
+      map.set(h.id, h);
+    } else {
+      // Prefer latest updatedAt
+      const existing = map.get(h.id);
+      map.set(h.id, (new Date(h.updatedAt || 0) > new Date(existing.updatedAt || 0)) ? h : existing);
+    }
+  });
+  return Array.from(map.values());
+}
+
 export async function syncRemoteToLocal() {
   const user = await getAuthUser();
   if (!user) return;
   const remote = await getHabits();
-  // write to local in the app's expected format
-  localStorage.setItem('habitgrid_data', JSON.stringify(remote));
+  const localHabits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+
+  // Backup local data before any destructive change
+  backupLocalHabits();
+
+  // If both local and remote have data, merge and update both
+  if (localHabits.length && remote.length) {
+    const merged = mergeHabits(localHabits, remote);
+    localStorage.setItem('habitgrid_data', JSON.stringify(merged));
+    // Optionally, upsert merged to remote as well
+    await supabase.from('habits').upsert(merged, { onConflict: 'id' });
+  } else if (!remote.length && localHabits.length) {
+    // Remote empty, local has data: push local to remote
+    await supabase.from('habits').upsert(localHabits, { onConflict: 'id' });
+    localStorage.setItem('habitgrid_data', JSON.stringify(localHabits));
+  } else if (remote.length && !localHabits.length) {
+    // Local empty, remote has data: pull remote to local
+    localStorage.setItem('habitgrid_data', JSON.stringify(remote));
+  } // else both empty: do nothing
+
   // Notify UI to reload if listening
   window.dispatchEvent(new CustomEvent('habitgrid-sync-updated'));
 }
