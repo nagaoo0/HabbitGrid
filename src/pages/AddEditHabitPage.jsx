@@ -1,3 +1,11 @@
+// UUID v4 generator (browser safe, duplicate of datastore.js for local use)
+function generateUUID() {
+  if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -73,7 +81,7 @@ const AddEditHabitPage = () => {
       // Add to localStorage for instant UI
       const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
       const newHabit = {
-        id: Date.now().toString(),
+        id: generateUUID(),
         name: name.trim(),
         color,
         category: category.trim(),
