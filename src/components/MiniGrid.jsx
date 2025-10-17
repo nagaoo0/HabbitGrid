@@ -40,7 +40,7 @@ function getFreezeIcon() {
 import { motion } from 'framer-motion';
 import { getColorIntensity, isToday, formatDate } from '../lib/utils-habit';
 import { getFrozenDays } from '../lib/utils-habit';
-import { toggleCompletion } from '../lib/datastore';
+import { toggleCompletion, getAuthUser } from '../lib/datastore';
 import { toast } from './ui/use-toast';
 
 const MiniGrid = ({ habit, onUpdate }) => {
@@ -69,17 +69,20 @@ const MiniGrid = ({ habit, onUpdate }) => {
     const dateStr = formatDate(date);
     const isTodayCell = isToday(date);
     const wasCompleted = habit.completions.includes(dateStr);
-    // Optimistic local update
-    const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
-    const idx = habits.findIndex(h => h.id === habit.id);
-    if (idx !== -1) {
-      const completions = Array.isArray(habits[idx].completions) ? [...habits[idx].completions] : [];
-      const cidx = completions.indexOf(dateStr);
-      if (cidx > -1) completions.splice(cidx, 1); else completions.push(dateStr);
-      habits[idx].completions = completions;
-      localStorage.setItem('habitgrid_data', JSON.stringify(habits));
+    // Only optimistic write if logged in; in local-only mode, datastore handles it to avoid double-toggle
+    const user = await getAuthUser();
+    if (user) {
+      const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+      const idx = habits.findIndex(h => h.id === habit.id);
+      if (idx !== -1) {
+        const completions = Array.isArray(habits[idx].completions) ? [...habits[idx].completions] : [];
+        const cidx = completions.indexOf(dateStr);
+        if (cidx > -1) completions.splice(cidx, 1); else completions.push(dateStr);
+        habits[idx].completions = completions;
+        localStorage.setItem('habitgrid_data', JSON.stringify(habits));
+      }
     }
-    toggleCompletion(habit.id, dateStr); // background sync
+    await toggleCompletion(habit.id, dateStr);
     onUpdate();
     // Only show encouragement toast if validating (adding) today's dot
     if (isTodayCell && !wasCompleted) {
