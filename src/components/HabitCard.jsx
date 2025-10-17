@@ -6,6 +6,14 @@ import { Button } from './ui/button';
 import MiniGrid from './MiniGrid';
 import AnimatedCounter from './AnimatedCounter';
 
+
+// Helper to get streak icon from localStorage or fallback
+function getStreakIcon() {
+  const icon = typeof window !== 'undefined' ? localStorage.getItem('streakIcon') : null;
+  if (!icon || icon === 'flame') return <Flame className="w-4 h-4 text-orange-500" />;
+  return <span className="w-4 h-4 text-lg align-text-bottom" role="img" aria-label="Streak Icon">{icon}</span>;
+}
+
 const HabitCard = ({ habit, onUpdate }) => {
   const navigate = useNavigate();
 
@@ -27,11 +35,11 @@ const HabitCard = ({ habit, onUpdate }) => {
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Flame className="w-4 h-4 text-orange-500" />
-                <span><AnimatedCounter value={habit.currentStreak || 0} duration={800} /> day streak</span>
+              {getStreakIcon()}
+              <span><AnimatedCounter value={habit.currentStreak || 0} duration={800} /> day streak</span>
             </div>
             <span>•</span>
-              <span>Personal Record: <AnimatedCounter value={habit.longestStreak || 0} duration={800} /> days</span>
+            <span>Personal Record: <AnimatedCounter value={habit.longestStreak || 0} duration={800} /> days</span>
           </div>
         </div>
         <Button

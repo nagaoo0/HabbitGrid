@@ -13,6 +13,30 @@ function lightenColor(hex, percent) {
   return `rgb(${r},${g},${b})`;
 }
 import { Flame } from 'lucide-react';
+// Helpers to get custom icons from localStorage or fallback
+function getStreakIcon() {
+  if (typeof window === 'undefined') return (
+    <span className="flex items-center justify-center w-full h-full">
+      <Flame className="w-4 h-4 drop-shadow-lg" />
+    </span>
+  );
+  const icon = localStorage.getItem('streakIcon');
+  if (!icon || icon === 'flame') return (
+    <span className="flex items-center justify-center w-full h-full">
+      <Flame className="w-4 h-4 drop-shadow-lg" />
+    </span>
+  );
+  return (
+    <span className="flex items-center justify-center w-full h-full">
+      <span className="text-lg" role="img" aria-label="Streak Icon">{icon}</span>
+    </span>
+  );
+}
+function getFreezeIcon() {
+  if (typeof window === 'undefined') return '❄️';
+  const icon = localStorage.getItem('freezeIcon');
+  return icon || '❄️';
+}
 import { motion } from 'framer-motion';
 import { getColorIntensity, isToday, formatDate } from '../lib/utils-habit';
 import { getFrozenDays } from '../lib/utils-habit';
@@ -122,7 +146,7 @@ const MiniGrid = ({ habit, onUpdate }) => {
                       }}
                       transition={{ duration: 0.7, ease: 'easeInOut' }}
                     >
-                      ❄️
+                      {getFreezeIcon()}
                     </motion.span>
                   )}
                   {/* Flame icon for full streak days */}
@@ -147,6 +171,7 @@ const MiniGrid = ({ habit, onUpdate }) => {
                       whileTap={{ scale: 1.2, rotate: 0 }}
                     >
                       <motion.div
+                        className="flex items-center justify-center w-full h-full"
                         animate={{ rotate: [0, 12, -12, 0] }}
                         transition={{
                           repeat: Infinity,
@@ -154,12 +179,8 @@ const MiniGrid = ({ habit, onUpdate }) => {
                           duration: 2,
                           ease: 'easeInOut',
                         }}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
                       >
-                        <Flame
-                          className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 drop-shadow-lg"
-                          style={{ color: lightenColor(habit.color, 0.4), filter: 'brightness(1.3) drop-shadow(0 0 6px white)' }}
-                        />
+                        {getStreakIcon()}
                       </motion.div>
                     </motion.span>
                   )}
