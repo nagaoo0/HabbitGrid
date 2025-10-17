@@ -1,3 +1,9 @@
+html, body {
+  background-color: #fff;
+}
+html.dark, body.dark {
+  background-color: #020617;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
