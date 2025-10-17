@@ -7,7 +7,9 @@ import { Separator } from '../components/ui/separator';
 import { Switch } from '../components/ui/switch';
 import { Label } from '../components/ui/label';
 import { useToast } from '../components/ui/use-toast';
-import { exportData, importData, clearAllData } from '../lib/storage';
+import { exportData, importData, clearAllData } from '../lib/datastore';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { syncLocalToRemoteIfNeeded } from '../lib/datastore';
 import { addIntegration, getIntegrations, removeIntegration, getGitEnabled, setGitEnabled, fetchAllGitActivity, getCachedGitActivity } from '../lib/git';
 
 const DEFAULT_STREAK_ICON = 'flame';
@@ -57,6 +59,27 @@ const SettingsPage = () => {
   const [form, setForm] = useState({ provider: 'github', baseUrl: '', username: '', token: '' });
   const [{ lastSync }, setCacheInfo] = useState(getCachedGitActivity());
   const [syncing, setSyncing] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    supabase.auth.getUser().then(({ data }) => setUserEmail(data?.user?.email || ''));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email || '');
+      if (session?.user) syncLocalToRemoteIfNeeded();
+    });
+    return () => sub?.subscription?.unsubscribe();
+  }, []);
+
+  const handleLogin = async (provider) => {
+    if (!isSupabaseConfigured()) return alert('Supabase not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+    const { error } = await supabase.auth.signInWithOAuth({ provider });
+    if (error) alert(error.message);
+  };
+
+  const handleLogout = async () => {
+    await supabase?.auth?.signOut();
+  };
 
   useEffect(() => {
     if (darkMode) {
@@ -178,10 +201,20 @@ const SettingsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">Settings</h1>
             <p className="text-sm text-muted-foreground">Customize your experience</p>
           </div>
+          {isSupabaseConfigured() && (
+            userEmail ? (
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-muted-foreground">{userEmail}</span>
+                <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-full">Logout</Button>
+              </div>
+            ) : (
+              <Button onClick={() => navigate('/login-providers')} variant="outline" size="sm" className="rounded-full ml-auto">Login to Sync</Button>
+            )
+          )}
         </motion.div>
 
         <div className="space-y-4">

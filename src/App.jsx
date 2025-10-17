@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import HabitDetailPage from './pages/HabitDetailPage';
 import AddEditHabitPage from './pages/AddEditHabitPage';
 import SettingsPage from './pages/SettingsPage';
+import LoginProvidersPage from './pages/LoginProvidersPage';
 import { Toaster } from './components/ui/toaster';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Route path="/add" element={<AddEditHabitPage />} />
           <Route path="/edit/:id" element={<AddEditHabitPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/login-providers" element={<LoginProvidersPage />} />
         </Routes>
         <Toaster />
       </div>

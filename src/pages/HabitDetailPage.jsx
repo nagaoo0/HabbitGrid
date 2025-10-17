@@ -6,7 +6,13 @@ import { Button } from '../components/ui/button';
 import { useToast } from '../components/ui/use-toast';
 import HabitGrid from '../components/HabitGrid';
 import DeleteHabitDialog from '../components/DeleteHabitDialog';
-import { getHabit, deleteHabit } from '../lib/storage';
+import { getHabits, deleteHabit } from '../lib/datastore';
+
+// Local helper to get habit by id from localStorage
+function getHabit(id) {
+  const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+  return habits.find(h => h.id === id);
+}
 import AnimatedCounter from '../components/AnimatedCounter';
 
 const HabitDetailPage = () => {
@@ -44,7 +50,11 @@ const HabitDetailPage = () => {
   };
 
   const handleDelete = () => {
-    deleteHabit(id);
+    // Optimistic local delete
+    const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+    const filtered = habits.filter(h => h.id !== id);
+    localStorage.setItem('habitgrid_data', JSON.stringify(filtered));
+    deleteHabit(id); // background sync
     toast({
       title: "✅ Habit deleted",
       description: "Your habit has been removed successfully.",

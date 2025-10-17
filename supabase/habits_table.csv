@@ -1,0 +1,2 @@
+id,user_id,name,color,category,completions,current_streak,longest_streak,sort_order,created_at,updated_at
+3fa85f64-5717-4562-b3fc-2c963f66afa6,11111111-1111-1111-1111-111111111111,Sample Habit,#22c55e,Health,"[""2025-01-01"",""2025-01-02""]",2,5,0,2025-01-01T00:00:00Z,2025-01-02T00:00:00Z

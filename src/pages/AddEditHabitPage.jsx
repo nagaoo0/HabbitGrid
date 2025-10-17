@@ -7,7 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { useToast } from '../components/ui/use-toast';
 import ColorPicker from '../components/ColorPicker';
-import { getHabit, saveHabit, updateHabit } from '../lib/storage';
+import { getHabits, saveHabit, updateHabit } from '../lib/datastore';
 
 const AddEditHabitPage = () => {
   const { id } = useParams();
@@ -49,14 +49,25 @@ const AddEditHabitPage = () => {
       return;
     }
 
+    // Optimistic local update
     if (isEdit) {
-      updateHabit(id, { name: name.trim(), color, category: category.trim() });
+      // Update localStorage directly for instant UI
+      const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+      const idx = habits.findIndex(h => h.id === id);
+      if (idx !== -1) {
+        habits[idx] = { ...habits[idx], name: name.trim(), color, category: category.trim() };
+        localStorage.setItem('habitgrid_data', JSON.stringify(habits));
+      }
+      updateHabit(id, { name: name.trim(), color, category: category.trim() }); // background sync
       toast({
         title: "✅ Habit updated",
         description: "Your habit has been updated successfully.",
       });
     } else {
-      saveHabit({
+      // Add to localStorage for instant UI
+      const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+      const newHabit = {
+        id: Date.now().toString(),
         name: name.trim(),
         color,
         category: category.trim(),
@@ -64,7 +75,12 @@ const AddEditHabitPage = () => {
         currentStreak: 0,
         longestStreak: 0,
         createdAt: new Date().toISOString(),
-      });
+        updatedAt: new Date().toISOString(),
+        sortOrder: habits.length,
+      };
+      habits.push(newHabit);
+      localStorage.setItem('habitgrid_data', JSON.stringify(habits));
+      saveHabit(newHabit); // background sync
       toast({
         title: "✅ Habit created",
         description: "Your new habit is ready to track!",

@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getColorIntensity, isToday, formatDate, getWeekdayLabel, getFrozenDays } from '../lib/utils-habit';
-import { toggleCompletion } from '../lib/storage';
+import { toggleCompletion } from '../lib/datastore';
 
 const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
   const frozenDays = getFrozenDays(habit.completions);
@@ -39,7 +39,18 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
   }, []);
 
   const handleCellClick = (date) => {
-    toggleCompletion(habit.id, formatDate(date));
+    const dateStr = formatDate(date);
+    // Optimistic local update
+    const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
+    const idx = habits.findIndex(h => h.id === habit.id);
+    if (idx !== -1) {
+      const completions = Array.isArray(habits[idx].completions) ? [...habits[idx].completions] : [];
+      const cidx = completions.indexOf(dateStr);
+      if (cidx > -1) completions.splice(cidx, 1); else completions.push(dateStr);
+      habits[idx].completions = completions;
+      localStorage.setItem('habitgrid_data', JSON.stringify(habits));
+    }
+    toggleCompletion(habit.id, dateStr); // background sync
     onUpdate();
   };
 

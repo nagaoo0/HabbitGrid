@@ -9,7 +9,7 @@ import HabitCard from '../components/HabitCard';
 import AnimatedCounter from '../components/AnimatedCounter';
 import GitActivityGrid from '../components/GitActivityGrid';
 import { getGitEnabled } from '../lib/git';
-import { getHabits, updateHabit } from '../lib/storage';
+import { getHabits, updateHabit, syncLocalToRemoteIfNeeded, syncRemoteToLocal, getAuthUser } from '../lib/datastore';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -22,8 +22,26 @@ const HomePage = () => {
   });
 
   useEffect(() => {
-    loadHabits();
-    setGitEnabled(getGitEnabled());
+    (async () => {
+      // On login, pull remote habits into localStorage
+      const user = await getAuthUser();
+      if (user) {
+        await syncRemoteToLocal();
+      }
+      await loadHabits();
+      setGitEnabled(getGitEnabled());
+    })();
+    // Background sync every 10s if logged in
+    const interval = setInterval(() => {
+      syncLocalToRemoteIfNeeded();
+    }, 10000);
+    // Listen for remote sync event to reload habits
+    const syncListener = () => loadHabits();
+    window.addEventListener('habitgrid-sync-updated', syncListener);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('habitgrid-sync-updated', syncListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -36,9 +54,9 @@ const HomePage = () => {
     }
   }, [darkMode]);
 
-  const loadHabits = () => {
-    const loadedHabits = getHabits();
-    // Sort by sortOrder if present, then fallback to createdAt
+  const loadHabits = async () => {
+    // Always read from local for instant UI
+    const loadedHabits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
     loadedHabits.sort((a, b) => {
       if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
       if (a.sortOrder !== undefined) return -1;
@@ -211,7 +229,7 @@ const HomePage = () => {
                 ...Object.values(grouped).flat()
               ];
             }
-            setTimeout(loadHabits, 100); // reload after update
+            setTimeout(loadHabits, 0); // reload instantly after update
           }}
         >
           <div className="space-y-6">
