@@ -234,7 +234,8 @@ const HomePage = () => {
                 ...Object.values(grouped).flat()
               ];
             }
-            setTimeout(loadHabits, 0); // reload instantly after update
+            // Force immediate UI update after all updates
+            loadHabits();
           }}
         >
           <div className="space-y-6">

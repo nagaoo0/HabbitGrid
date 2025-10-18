@@ -134,6 +134,8 @@ export async function updateHabit(id, updates) {
     console.warn('Supabase updateHabit error, writing local:', error.message);
     return local.updateHabit(id, updates);
   }
+  // After any update, trigger a sync to ensure all local changes (including categories) are pushed to remote
+  await syncLocalToRemoteIfNeeded();
 }
 
 export async function deleteHabit(id) {
