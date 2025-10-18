@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://myhabitgrid.com/sitemap.xml
