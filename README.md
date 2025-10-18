@@ -19,6 +19,7 @@ A modern, grid-based habit tracker app inspired by GitHub contribution graphs. T
 - [Self-hosted Mirror (Gitea)](https://git.mihajlociric.com/count0/HabitGrid)
 
 
+
 ## Features
 - GitHub-style habit grid (calendar view)
 - Streak tracking and personal bests
@@ -26,9 +27,18 @@ A modern, grid-based habit tracker app inspired by GitHub contribution graphs. T
 - Dark mode and light mode
 - Data export/import (JSON backup)
 - Responsive design (desktop & mobile)
+- **Cross-device sync with Supabase (cloud save)**
+- **Offline-first:** works fully without login, syncs local habits to cloud on login
 - Built with React, Vite, Tailwind CSS, Radix UI, and Framer Motion
 
 ---
+
+
+## How Sync Works
+
+- By default, all habits are stored locally and work offline.
+- When you log in (via the call to action button), your local habits are synced to Supabase and available on all devices.
+- Any changes (including categories, order, completions) are automatically pushed to the cloud when logged in.
 
 ## Getting Started
 
@@ -69,7 +79,29 @@ src/
   pages/
 ```
 
-## Deployment Tip
+
+## Cloud Sync Setup
+
+To enable cross-device sync, you need a free [Supabase](https://supabase.com/) account:
+
+1. Create a Supabase project and set up a `habits` table with the following schema:
+   ```sql
+   create table habits (
+     id uuid primary key default gen_random_uuid(),
+     user_id uuid not null,
+     name text not null,
+     color text,
+     category text,
+     completions jsonb default '[]'::jsonb,
+     current_streak int default 0,
+     longest_streak int default 0,
+     sort_order int default 0,
+     created_at timestamptz default now(),
+     updated_at timestamptz default now()
+   );
+   ```
+2. Add your Supabase project URL and anon key to the app's environment/config.
+3. Deploy as usual (see below).
 
 You can easily deploy your own instance of HabitGrid using [Cloudflare Pages](https://pages.cloudflare.com/):
 
@@ -86,9 +118,11 @@ You can easily deploy your own instance of HabitGrid using [Cloudflare Pages](ht
    ```
 5. Deploy and enjoy your own habit tracker online!
 
-## License
 
-MIT
+## Offline-First Guarantee
+
+- You can use HabitGrid without ever logging in—everything works locally.
+- If you decide to log in later, all your local habits (including categories and order) will be synced to the cloud and available on all devices.
 
 ---
 
@@ -97,8 +131,6 @@ MIT
 - [Live Demo](https://myhabitgrid.com/)
 - [GitHub](https://github.com/nagaoo0/HabitGrid)
 - [Mirror (Gitea)](https://git.mihajlociric.com/count0/HabitGrid)
-
----
 
 ---
 
