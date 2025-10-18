@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { useNavigate } from 'react-router-dom';
+// ...existing code...
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Settings, TrendingUp, Flame, Calendar, Moon, Sun } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -10,6 +10,7 @@ import AnimatedCounter from '../components/AnimatedCounter';
 import GitActivityGrid from '../components/GitActivityGrid';
 import { getGitEnabled } from '../lib/git';
 import { getHabits, updateHabit, syncLocalToRemoteIfNeeded, syncRemoteToLocal, getAuthUser } from '../lib/datastore';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -84,6 +85,15 @@ const HomePage = () => {
     navigate('/add');
   };
 
+  const handleLoginSync = () => {
+    navigate('/login');
+  };
+
+  const handleManualSync = async () => {
+    await syncLocalToRemoteIfNeeded();
+    toast({ title: 'Synced!', description: 'Your habits have been synced to the cloud.' });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -123,6 +133,7 @@ const HomePage = () => {
           </div>
         </motion.div>
 
+        
         {/* Stats Overview */}
         {habits.length > 0 && (
           <motion.div
@@ -156,6 +167,8 @@ const HomePage = () => {
             <GitActivityGrid />
           </motion.div>
         )}
+
+        
 
         {/* Habits List */}
         {/* Grouped Habits by Category, collapsible, and uncategorized habits outside */}
@@ -366,9 +379,34 @@ const HomePage = () => {
                 <Plus className="w-5 h-5 mr-2" />
                 Create First Habit
               </Button>
+
+              {/* Call to Action for Login/Sync */}
+        <div className="mb-6 flex flex-col items-center mt-8">
+          {!loggedIn ? (
+            <Button
+              onClick={handleLoginSync}
+              size="lg"
+              className="rounded-full shadow-lg bg-emerald-600 text-white hover:bg-emerald-700 transition"
+            >
+              <Flame className="w-5 h-5 mr-2" />
+              Login & Sync My Habits
+            </Button>
+          ) : (
+            <Button
+              onClick={handleManualSync}
+              size="lg"
+              className="rounded-full shadow-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Sync My Habits Now
+            </Button>
+          )}
+        </div>
             </motion.div>
           )
         )}
+
+        
 
         {/* Add Button */}
         {habits.length > 0 && (
