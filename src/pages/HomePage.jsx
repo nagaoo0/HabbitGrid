@@ -188,67 +188,83 @@ const HomePage = () => {
 
             let newHabits = [...habits];
 
-            // If dropping into uncategorized, always unset category
+            // Helper to update local storage and UI instantly
+            const updateLocalOrder = (habitsArr) => {
+              localStorage.setItem('habitgrid_data', JSON.stringify(habitsArr));
+              setHabits(habitsArr);
+            };
+
+            // Collect async remote updates to fire after local update
+            let remoteUpdates = [];
+
             if (destination.droppableId === 'uncategorized') {
               let items, removed;
               if (source.droppableId === 'uncategorized') {
-                // Reorder within uncategorized
                 items = Array.from(uncategorized);
                 [removed] = items.splice(source.index, 1);
               } else {
-                // Move from category to uncategorized
                 items = Array.from(uncategorized);
                 const sourceItems = Array.from(grouped[source.droppableId]);
                 [removed] = sourceItems.splice(source.index, 1);
                 removed.category = '';
                 grouped[source.droppableId] = sourceItems;
               }
-              // Always set category to ''
               removed.category = '';
               items.splice(destination.index, 0, removed);
-              items.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: '' }));
+              items.forEach((h, i) => {
+                h.sortOrder = i;
+                h.category = '';
+                remoteUpdates.push(updateHabit(h.id, { sortOrder: i, category: '' }));
+              });
               newHabits = [
                 ...items,
                 ...Object.values(grouped).flat()
               ];
+              updateLocalOrder(newHabits);
             } else if (source.droppableId === 'uncategorized' && grouped[destination.droppableId]) {
-              // Move from uncategorized to category
               const items = Array.from(uncategorized);
               const [removed] = items.splice(source.index, 1);
               removed.category = destination.droppableId;
               const destItems = Array.from(grouped[destination.droppableId] || []);
               destItems.splice(destination.index, 0, removed);
-              destItems.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: h.category }));
+              destItems.forEach((h, i) => {
+                h.sortOrder = i;
+                remoteUpdates.push(updateHabit(h.id, { sortOrder: i, category: h.category }));
+              });
               newHabits = [
                 ...items,
                 ...Object.values({ ...grouped, [destination.droppableId]: destItems }).flat()
               ];
+              updateLocalOrder(newHabits);
             } else if (grouped[source.droppableId] && grouped[destination.droppableId]) {
-              // Move within or between categories
               const sourceItems = Array.from(grouped[source.droppableId]);
               const [removed] = sourceItems.splice(source.index, 1);
               if (source.droppableId === destination.droppableId) {
-                // Reorder within same category
                 sourceItems.splice(destination.index, 0, removed);
-                sourceItems.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: h.category }));
+                sourceItems.forEach((h, i) => {
+                  h.sortOrder = i;
+                  remoteUpdates.push(updateHabit(h.id, { sortOrder: i, category: h.category }));
+                });
                 grouped[source.droppableId] = sourceItems;
               } else {
-                // Move to another category
                 const destItems = Array.from(grouped[destination.droppableId] || []);
                 removed.category = destination.droppableId;
                 destItems.splice(destination.index, 0, removed);
-                destItems.forEach((h, i) => updateHabit(h.id, { sortOrder: i, category: h.category }));
+                destItems.forEach((h, i) => {
+                  h.sortOrder = i;
+                  remoteUpdates.push(updateHabit(h.id, { sortOrder: i, category: h.category }));
+                });
                 grouped[source.droppableId] = sourceItems;
                 grouped[destination.droppableId] = destItems;
               }
-              // Flatten
               newHabits = [
                 ...uncategorized,
                 ...Object.values(grouped).flat()
               ];
+              updateLocalOrder(newHabits);
             }
-            // Force immediate UI update after all updates
-            loadHabits();
+            // Fire remote updates async, do not block UI
+            Promise.allSettled(remoteUpdates);
           }}
         >
           <div className="space-y-6">
