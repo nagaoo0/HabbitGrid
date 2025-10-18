@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HabitGrid</string>
+    <string name="title_activity_main">HabitGrid</string>
+    <string name="package_name">com.habitgrid.app</string>
+    <string name="custom_url_scheme">com.habitgrid.app</string>
+</resources>

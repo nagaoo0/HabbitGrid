@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite --host :: --port 3000",
     "build": "vite build",
-    "preview": "vite preview --host :: --port 3000"
+    "preview": "vite preview --host :: --port 3000",
+    "cap:init": "npx cap init HabitGrid com.habitgrid.app --web-dir=dist",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap add android",
+    "cap:open": "npx cap open android"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -39,6 +43,9 @@
     "@babel/parser": "^7.27.0",
     "@babel/traverse": "^7.27.0",
     "@babel/types": "^7.27.0",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
     "@types/node": "^20.8.3",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",

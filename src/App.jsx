@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { Helmet } from 'react-helmet';
 import HomePage from './pages/HomePage';
 import HabitDetailPage from './pages/HabitDetailPage';
@@ -9,8 +10,10 @@ import LoginProvidersPage from './pages/LoginProvidersPage';
 import { Toaster } from './components/ui/toaster';
 
 function App() {
+  const isNative = Capacitor?.isNativePlatform?.() ?? false;
+  const RouterComponent = isNative ? HashRouter : BrowserRouter;
   return (
-    <Router>
+    <RouterComponent>
       <Helmet>
         <title>HabitGrid - Commit to yourself, one square at a time</title>
         <meta name="description" content="Track your habits with a beautiful GitHub-style contribution grid. Build streaks, visualize progress, and commit to yourself daily." />
@@ -26,7 +29,7 @@ function App() {
         </Routes>
         <Toaster />
       </div>
-    </Router>
+    </RouterComponent>
   );
 }
 
