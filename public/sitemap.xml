@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://yourdomain.com/</loc>
+  </url>
+  <url>
+    <loc>https://yourdomain.com/add</loc>
+  </url>
+  <url>
+    <loc>https://yourdomain.com/settings</loc>
+  </url>
+  <url>
+    <loc>https://yourdomain.com/login-providers</loc>
+  </url>
+  <!-- For dynamic routes like /habit/:id and /edit/:id, add actual URLs if you have them -->
+</urlset>
