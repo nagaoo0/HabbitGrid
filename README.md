@@ -121,7 +121,7 @@ You can easily deploy your own instance of HabitGrid using [Cloudflare Pages](ht
 
 ## Offline-First Guarantee
 
-- You can use HabitGrid without ever logging in—everything works locally.
+- You can use HabitGrid without ever logging in everything works locally.
 - If you decide to log in later, all your local habits (including categories and order) will be synced to the cloud and available on all devices.
 
 ---
