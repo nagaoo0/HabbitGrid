@@ -69,19 +69,6 @@ const MiniGrid = ({ habit, onUpdate }) => {
     const dateStr = formatDate(date);
     const isTodayCell = isToday(date);
     const wasCompleted = habit.completions.includes(dateStr);
-    // Only optimistic write if logged in; in local-only mode, datastore handles it to avoid double-toggle
-    const user = await getAuthUser();
-    if (user) {
-      const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
-      const idx = habits.findIndex(h => h.id === habit.id);
-      if (idx !== -1) {
-        const completions = Array.isArray(habits[idx].completions) ? [...habits[idx].completions] : [];
-        const cidx = completions.indexOf(dateStr);
-        if (cidx > -1) completions.splice(cidx, 1); else completions.push(dateStr);
-        habits[idx].completions = completions;
-        localStorage.setItem('habitgrid_data', JSON.stringify(habits));
-      }
-    }
     await toggleCompletion(habit.id, dateStr);
     onUpdate();
     // Only show encouragement toast if validating (adding) today's dot

@@ -40,19 +40,7 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
 
   const handleCellClick = async (date) => {
     const dateStr = formatDate(date);
-    // Only do optimistic localStorage write if logged in (remote-first). In local-only mode, let datastore handle it to avoid double-toggle.
-    const user = await getAuthUser();
-    if (user) {
-      const habits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
-      const idx = habits.findIndex(h => h.id === habit.id);
-      if (idx !== -1) {
-        const completions = Array.isArray(habits[idx].completions) ? [...habits[idx].completions] : [];
-        const cidx = completions.indexOf(dateStr);
-        if (cidx > -1) completions.splice(cidx, 1); else completions.push(dateStr);
-        habits[idx].completions = completions;
-        localStorage.setItem('habitgrid_data', JSON.stringify(habits));
-      }
-    }
+    // Always call toggleCompletion (handles local/remote), then update UI
     await toggleCompletion(habit.id, dateStr);
     onUpdate();
   };
