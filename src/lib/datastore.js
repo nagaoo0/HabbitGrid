@@ -208,32 +208,26 @@ export async function syncLocalToRemoteIfNeeded() {
   const user = await getAuthUser();
   if (!user) return;
 
-  const already = localStorage.getItem(SYNC_FLAG);
-  const { data: remote, error } = await supabase.from('habits').select('id').limit(1);
-  if (error) return;
-
-  if (!already || (remote || []).length === 0) {
-    let habits = local.getHabits();
-    if (habits.length === 0) return localStorage.setItem(SYNC_FLAG, new Date().toISOString());
-    habits = ensureUUIDs(habits);
-    // Persist back to local so IDs match remote after upsert
-    localStorage.setItem('habitgrid_data', JSON.stringify(habits));
-    const rows = habits.map(h => ({
-      id: h.id,
-      user_id: user.id,
-      name: h.name,
-      color: h.color,
-      category: h.category || '',
-      completions: h.completions || [],
-      current_streak: h.currentStreak ?? 0,
-      longest_streak: h.longestStreak ?? 0,
-      sort_order: h.sortOrder ?? 0,
-      created_at: h.createdAt || new Date().toISOString(),
-      updated_at: h.updatedAt || new Date().toISOString(),
-    }));
-    await supabase.from('habits').upsert(rows, { onConflict: 'id' });
-    localStorage.setItem(SYNC_FLAG, new Date().toISOString());
-  }
+  // Always upsert all local habits to Supabase after login
+  let habits = local.getHabits();
+  if (habits.length === 0) return localStorage.setItem(SYNC_FLAG, new Date().toISOString());
+  habits = ensureUUIDs(habits);
+  localStorage.setItem('habitgrid_data', JSON.stringify(habits));
+  const rows = habits.map(h => ({
+    id: h.id,
+    user_id: user.id,
+    name: h.name,
+    color: h.color,
+    category: h.category || '',
+    completions: h.completions || [],
+    current_streak: h.currentStreak ?? 0,
+    longest_streak: h.longestStreak ?? 0,
+    sort_order: h.sortOrder ?? 0,
+    created_at: h.createdAt || new Date().toISOString(),
+    updated_at: h.updatedAt || new Date().toISOString(),
+  }));
+  await supabase.from('habits').upsert(rows, { onConflict: 'id' });
+  localStorage.setItem(SYNC_FLAG, new Date().toISOString());
 }
 
 
