@@ -180,6 +180,7 @@ async function fetchGitHubEvents({ baseUrl = 'https://api.github.com', username,
   return counts;
 }
 
+//This bullshit is still not working, but at least it is not crashing everything
 async function fetchGiteaLike({ baseUrl, username, token }, days = 365) {
   let authMode = token ? 'token' : null; // 'token' | 'bearer' | null
   const counts = {};
@@ -228,6 +229,7 @@ async function fetchGiteaLike({ baseUrl, username, token }, days = 365) {
   return counts;
 }
 
+//gitlab fetch should work now
 async function fetchGitLabEvents({ baseUrl = 'https://gitlab.com', token }, days = 365) {
   const headers = { 'Accept': 'application/json', 'PRIVATE-TOKEN': token };
   const counts = {};
