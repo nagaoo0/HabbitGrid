@@ -9,7 +9,7 @@ import HabitCard from '../components/HabitCard';
 import AnimatedCounter from '../components/AnimatedCounter';
 import GitActivityGrid from '../components/GitActivityGrid';
 import { getGitEnabled } from '../lib/git';
-import { getHabits, updateHabit, syncLocalToRemoteIfNeeded, syncRemoteToLocal, getAuthUser } from '../lib/datastore';
+import { getHabits, updateHabit, syncLocalToRemoteIfNeeded, syncRemoteToLocal, getAuthUser, hasEverLoggedIn } from '../lib/datastore';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -19,6 +19,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [everLoggedIn, setEverLoggedIn] = useState(false);
   const [gitEnabled, setGitEnabled] = useState(getGitEnabled());
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
@@ -30,6 +31,12 @@ const HomePage = () => {
       // On login, pull remote habits into localStorage
       const user = await getAuthUser();
       setLoggedIn(!!user);
+      // Mark whether this browser has seen a login before
+      try {
+        setEverLoggedIn(hasEverLoggedIn());
+      } catch (e) {
+        setEverLoggedIn(false);
+      }
       if (user) {
         await syncRemoteToLocal();
       }
@@ -133,7 +140,21 @@ const HomePage = () => {
           </div>
         </motion.div>
 
-        
+        {/* Prompt previously-signed-in users to re-authenticate if currently logged out */}
+        {!loggedIn && everLoggedIn && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-6xl mx-auto mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/40 rounded-lg border border-yellow-100 dark:border-yellow-800 flex items-center justify-between"
+          >
+            <div className="text-sm text-yellow-800 dark:text-yellow-200">Looks like you were previously signed in. Sign in again to keep your habits synced across devices.</div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => navigate('/login-providers')}>Sign in</Button>
+              <Button size="sm" variant="ghost" onClick={() => { localStorage.removeItem('habitgrid_ever_logged_in'); setEverLoggedIn(false); }}>Dismiss</Button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Stats Overview */}
         {habits.length > 0 && (
           <motion.div
@@ -167,8 +188,6 @@ const HomePage = () => {
             <GitActivityGrid />
           </motion.div>
         )}
-
-        
 
         {/* Habits List */}
         {/* Grouped Habits by Category, collapsible, and uncategorized habits outside */}
@@ -421,8 +440,6 @@ const HomePage = () => {
             </motion.div>
           )
         )}
-
-        
 
         {/* Add Button */}
         {habits.length > 0 && (

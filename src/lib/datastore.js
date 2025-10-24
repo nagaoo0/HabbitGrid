@@ -30,7 +30,23 @@ const SYNC_FLAG = 'habitgrid_remote_synced_at';
 export const getAuthUser = async () => {
   if (!isSupabaseConfigured()) return null;
   const { data } = await supabase.auth.getUser();
-  return data?.user ?? null;
+  const user = data?.user ?? null;
+  // Mark that the user has logged in at least once so we can prompt later if they're logged out
+  try {
+    if (user) localStorage.setItem('habitgrid_ever_logged_in', '1');
+  } catch (e) {
+    // ignore localStorage errors in restrictive environments
+  }
+  return user;
+};
+
+// Helper to check whether the user has ever logged in from this browser
+export const hasEverLoggedIn = () => {
+  try {
+    return localStorage.getItem('habitgrid_ever_logged_in') === '1';
+  } catch (e) {
+    return false;
+  }
 };
 
 export const isLoggedIn = async () => Boolean(await getAuthUser());
