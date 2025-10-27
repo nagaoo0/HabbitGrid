@@ -23,6 +23,7 @@ function ensureUUIDs(habits) {
   });
 }
 import { supabase, isSupabaseConfigured } from './supabase';
+import { calculateStreaks } from './utils-habit';
 import * as local from './storage';
 
 const SYNC_FLAG = 'habitgrid_remote_synced_at';
@@ -172,7 +173,10 @@ export async function toggleCompletion(habitId, dateStr) {
   const completions = Array.isArray(target.completions) ? [...target.completions] : [];
   const idx = completions.indexOf(dateStr);
   if (idx > -1) completions.splice(idx, 1); else completions.push(dateStr);
-  return updateHabit(habitId, { completions });
+  // Calculate streaks and preserve personal record (do not decrease longest)
+  const { currentStreak, longestStreak } = calculateStreaks(completions);
+  const nextLongest = Math.max(longestStreak, target.longestStreak || 0);
+  return updateHabit(habitId, { completions, currentStreak, longestStreak: nextLongest });
 }
 
 

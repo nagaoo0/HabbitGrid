@@ -126,65 +126,7 @@ export const toggleCompletion = (habitId, dateStr) => {
   });
 };
 
-import { getFrozenDays } from './utils-habit.js';
-const calculateStreaks = (completions) => {
-  if (completions.length === 0) {
-    return { currentStreak: 0, longestStreak: 0 };
-  }
-  // Only use frozen days for streak calculation
-  const frozenDays = getFrozenDays(completions);
-  const allValid = Array.from(new Set([...completions, ...frozenDays]));
-  const sortedDates = allValid
-    .map(d => new Date(d))
-    .sort((a, b) => b - a);
-
-  let currentStreak = 0;
-  let longestStreak = 0;
-  let tempStreak = 1;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const mostRecent = sortedDates[0];
-  mostRecent.setHours(0, 0, 0, 0);
-
-  if (mostRecent.getTime() === today.getTime() || mostRecent.getTime() === yesterday.getTime()) {
-    currentStreak = 1;
-    for (let i = 1; i < sortedDates.length; i++) {
-      const current = new Date(sortedDates[i]);
-      current.setHours(0, 0, 0, 0);
-      const previous = new Date(sortedDates[i - 1]);
-      previous.setHours(0, 0, 0, 0);
-      const diffDays = Math.floor((previous - current) / (1000 * 60 * 60 * 24));
-      if (diffDays === 1) {
-        currentStreak++;
-        tempStreak++;
-      } else {
-        break;
-      }
-    }
-  }
-
-  tempStreak = 1;
-  for (let i = 1; i < sortedDates.length; i++) {
-    const current = new Date(sortedDates[i]);
-    current.setHours(0, 0, 0, 0);
-    const previous = new Date(sortedDates[i - 1]);
-    previous.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((previous - current) / (1000 * 60 * 60 * 24));
-    if (diffDays === 1) {
-      tempStreak++;
-      longestStreak = Math.max(longestStreak, tempStreak);
-    } else {
-      tempStreak = 1;
-    }
-  }
-
-  longestStreak = Math.max(longestStreak, currentStreak, 1);
-  return { currentStreak, longestStreak };
-}
+import { calculateStreaks } from './utils-habit.js';
 
 export const exportData = () => {
   const habits = getHabits();

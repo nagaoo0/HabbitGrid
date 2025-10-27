@@ -9,6 +9,7 @@ import HabitCard from '../components/HabitCard';
 import AnimatedCounter from '../components/AnimatedCounter';
 import GitActivityGrid from '../components/GitActivityGrid';
 import { getGitEnabled } from '../lib/git';
+import { calculateStreaks } from '../lib/utils-habit';
 import { getHabits, updateHabit, syncLocalToRemoteIfNeeded, syncRemoteToLocal, getAuthUser, hasEverLoggedIn } from '../lib/datastore';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,13 +71,27 @@ const HomePage = () => {
   const loadHabits = async () => {
     // Always read from local for instant UI
     const loadedHabits = JSON.parse(localStorage.getItem('habitgrid_data') || '[]');
-    loadedHabits.sort((a, b) => {
+    // One-time consistency pass: recompute streaks from completions if missing or outdated
+    let changed = false;
+    const updated = loadedHabits.map(h => {
+      const { currentStreak, longestStreak } = calculateStreaks(h.completions || []);
+      const nextLongest = Math.max(longestStreak, h.longestStreak || 0);
+      if ((h.currentStreak ?? 0) !== currentStreak || (h.longestStreak ?? 0) !== nextLongest) {
+        changed = true;
+        return { ...h, currentStreak, longestStreak: nextLongest };
+      }
+      return h;
+    });
+    if (changed) {
+      localStorage.setItem('habitgrid_data', JSON.stringify(updated));
+    }
+    updated.sort((a, b) => {
       if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
       if (a.sortOrder !== undefined) return -1;
       if (b.sortOrder !== undefined) return 1;
       return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
     });
-    setHabits(loadedHabits);
+    setHabits(updated);
     // Initialize collapsed state for new categories
     const categories = Array.from(new Set(loadedHabits.map(h => h.category || 'Uncategorized')));
     setCollapsedGroups(prev => {

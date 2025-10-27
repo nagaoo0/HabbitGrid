@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getColorIntensity, isToday, formatDate, getWeekdayLabel, getFrozenDays } from '../lib/utils-habit';
+import { getColorIntensity, isToday, formatDate, getWeekdayLabel, getFrozenDays, calculateStreaks } from '../lib/utils-habit';
 import { toggleCompletion, getAuthUser } from '../lib/datastore';
 
 const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
@@ -50,6 +50,11 @@ const HabitGrid = ({ habit, onUpdate, fullView = false }) => {
         const cidx = completions.indexOf(dateStr);
         if (cidx > -1) completions.splice(cidx, 1); else completions.push(dateStr);
         habits[idx].completions = completions;
+        // Recalculate streaks so counters reflect immediately
+        const { currentStreak, longestStreak } = calculateStreaks(completions);
+        const prevRecord = habits[idx].longestStreak || 0;
+        habits[idx].currentStreak = currentStreak;
+        habits[idx].longestStreak = Math.max(longestStreak, prevRecord);
         localStorage.setItem('habitgrid_data', JSON.stringify(habits));
       }
       onUpdate();
