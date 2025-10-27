@@ -93,7 +93,7 @@ const HomePage = () => {
   };
 
   const handleLoginSync = () => {
-    navigate('/login');
+    navigate('/login-providers');
   };
 
   const handleManualSync = async () => {
